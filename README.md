@@ -1,2 +1,2 @@
 # step
-blog
+Go语言简单博客。
