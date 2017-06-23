@@ -4,9 +4,8 @@ package controllers
 import (
 	"github.com/astaxie/beego"
 	"step/models"
-	"fmt"
+	"strconv"
 	"strings"
-	"github.com/astaxie/beego/validation"
 )
 
 type UserController struct {
@@ -26,7 +25,10 @@ func (u *UserController) Create() {
 		nickname := u.Input().Get("username")
 		email := u.Input().Get("email")
 		password := u.Input().Get("password")
-		role := u.Input().Get("role")
+		role, err := strconv.Atoi(u.Input().Get("role"))
+		if err != nil {
+			u.Redirect("/user/create", 302)
+		}
 		// 用户名成不能为空
 		if strings.TrimSpace(nickname) == "" {
 			u.Redirect("/user/create", 302)
@@ -36,9 +38,22 @@ func (u *UserController) Create() {
 			u.Redirect("/user/create", 302)
 		}
 		// 邮箱格式不合法
-		// 密码加密
-		// 保存
-		// 回到用户详情
+		// 密码不能为空
+		if strings.TrimSpace(password) == "" {
+			u.Redirect("/user/create", 302)
+		}
+		// 保存成功回到用户详情
+		res, err := models.Save(models.User{
+			Nickname: nickname,
+			Email:    email,
+			Password: password,
+			Role:     role,
+		})
+		if err != nil {
+			u.Redirect("/user/create", 302)
+		} else {
+			u.Redirect("/user/"+strconv.FormatInt(res.Id, 10), 302)
+		}
 	}
 	u.Data["roles"] = models.Roles()
 	u.Layout = "base.html"

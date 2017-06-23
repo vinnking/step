@@ -1,11 +1,11 @@
 package main
 
 import (
-	_ "step/routers"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 	"step/models"
+	_ "step/routers"
 )
 
 func init() {
@@ -18,4 +18,3 @@ func init() {
 func main() {
 	beego.Run()
 }
-
