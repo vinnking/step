@@ -3,6 +3,7 @@ package models
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -22,9 +23,6 @@ type User struct {
 	Utime    int64
 }
 
-// 密码强度
-const strength = 16
-
 // Roles 用户角色, 标识和描述
 func Roles() map[int]string {
 	return map[int]string{
@@ -41,31 +39,41 @@ func RoleDesc(id int) string {
 	return "未知"
 }
 
+// Status 用户状态
+func Status() map[int]string {
+	return map[int]string{
+		1: "可用",
+		2: "不可用",
+	}
+}
+
+// StatusDesc 用户状态描述
+func StatusDesc(id int) string {
+	if status, ok := Status()[id]; ok {
+		return status
+	}
+	return "未知"
+}
+
 // Salt 生成一个盐, 用于校验密码复杂度
 // 盐的长度不能超过120个字符
 func Salt() string {
-	return "#-@,//a4H,>"
+	return "cr42ew"
 }
 
 // Password 生成密码
-// 密码强度至少为16次循环md5加密后加盐
-func Password(password string, salt string, depth int) string {
-	if depth < strength {
-		depth = strength
-	}
-	md := md5.Sum([]byte(password))
-	for i := 0; i < depth; i++ {
-		md = md5.Sum([]byte(md))
-	}
-	return fmt.Sprintf("%s", md5.Sum([]byte(string(md)+salt)))
+func Password(password string, salt string) string {
+	h := md5.New()
+	h.Write([]byte(password + salt))
+	return fmt.Sprintf("%s", hex.EncodeToString(h.Sum(nil)))
 }
 
 // Save 保存用户信息
 // 返回用户信息和错误信息
-func Save(u User) (User, error) {
+func Save(u *User) (*User, error) {
 	o := orm.NewOrm()
 	u.Salt = Salt()
-	u.Password = Password(u.Password, u.Salt, 16)
+	u.Password = Password(u.Password, u.Salt)
 	u.Status = 1
 	u.Ctime = time.Now().Unix()
 	u.Utime = time.Now().Unix()
@@ -75,4 +83,12 @@ func Save(u User) (User, error) {
 	}
 	u.Id = id
 	return u, nil
+}
+
+// Info 用户信息
+func Info(id int64) (User, error) {
+	var u User
+	o := orm.NewOrm()
+	err := o.QueryTable(u).RelatedSel().Filter("Id", id).One(&u)
+	return u, err
 }
