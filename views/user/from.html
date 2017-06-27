@@ -1,15 +1,15 @@
 <form method="post" action="/user/create">
     <div class="form-group">
         <label for="nickname">昵称(显示用, 可不唯一)</label>
-        <input type="text" class="form-control" id="nickname" name="nickname" placeholder="请输入昵称">
+        <input type="text" class="form-control" id="nickname" name="nickname" value="{{.Nickname}}" placeholder="请输入昵称">
     </div>
     <div class="form-group">
         <label for="email">邮箱(查询用, 必须唯一)</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="请输入邮箱">
+        <input type="email" class="form-control" id="email" name="email" value="{{.Email}}" placeholder="请输入邮箱">
     </div>
     <div class="form-group">
         <label for="password">密码</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码">
+        <input type="password" class="form-control" id="password" name="password" value="" placeholder="请输入密码">
     </div>
     <div class="form-group">
         <label for="role">角色</label>
@@ -19,5 +19,5 @@
             {{end}}
         </select>
     </div>
-    <button type="submit" class="btn btn-primary">添加</button>
+    <button type="submit" class="btn btn-primary">{{if .isNewRecord}}添加{{else}}编辑{{end}}</button>
 </form>

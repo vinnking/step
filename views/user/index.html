@@ -8,7 +8,7 @@
     <a class="btn btn-primary" href="/user/create">添加</a>
 </p>
 
-<p class="text-info">共搜索到 <a class="text-success">3</a> 条符合条件的记录。</p>
+<p class="text-info">共搜索到 <a class="text-success">{{.users | len}}</a> 条符合条件的记录。</p>
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -21,77 +21,19 @@
         </tr>
     </thead>
     <tbody>
+        {{range .users}}
         <tr>
-            <td>1</td>
-            <td>张三</td>
-            <td>zhgxun1989@163.com</td>
-            <td>管理员</td>
-            <td>可用</td>
+            <td>{{.Id}}</td>
+            <td>{{.Nickname}}</td>
+            <td>{{.Email}}</td>
+            <td>{{.Role}}</td>
+            <td>{{.Status}}</td>
             <td>
-                <a href="#">编辑</a>&nbsp;&nbsp;|
-                <a href="#">停用</a>&nbsp;&nbsp;|
-                <a href="#">删除</a>
+                <a href="/user/update/{{.Id}}">编辑</a>&nbsp;&nbsp;|
+                <a href="/user/stop/{{.Id}}">停用</a>&nbsp;&nbsp;|
+                <a href="/user/delete/{{.Id}}">删除</a>
             </td>
         </tr>
-        <tr>
-            <td>1</td>
-            <td>张三</td>
-            <td>zhgxun1989@163.com</td>
-            <td>管理员</td>
-            <td>可用</td>
-            <td>
-                <a href="#">编辑</a>&nbsp;&nbsp;|
-                <a href="#">停用</a>&nbsp;&nbsp;|
-                <a href="#">删除</a>
-            </td>
-        </tr>
-        <tr>
-            <td>1</td>
-            <td>张三</td>
-            <td>zhgxun1989@163.com</td>
-            <td>管理员</td>
-            <td>可用</td>
-            <td>
-                <a href="#">编辑</a>&nbsp;&nbsp;|
-                <a href="#">停用</a>&nbsp;&nbsp;|
-                <a href="#">删除</a>
-            </td>
-        </tr>
-        <tr>
-            <td>1</td>
-            <td>张三</td>
-            <td>zhgxun1989@163.com</td>
-            <td>管理员</td>
-            <td>可用</td>
-            <td>
-                <a href="#">编辑</a>&nbsp;&nbsp;|
-                <a href="#">停用</a>&nbsp;&nbsp;|
-                <a href="#">删除</a>
-            </td>
-        </tr>
-        <tr>
-            <td>1</td>
-            <td>张三</td>
-            <td>zhgxun1989@163.com</td>
-            <td>管理员</td>
-            <td>可用</td>
-            <td>
-                <a href="#">编辑</a>&nbsp;&nbsp;|
-                <a href="#">停用</a>&nbsp;&nbsp;|
-                <a href="#">删除</a>
-            </td>
-        </tr>
-        <tr>
-            <td>1</td>
-            <td>张三</td>
-            <td>zhgxun1989@163.com</td>
-            <td>管理员</td>
-            <td>可用</td>
-            <td>
-                <a href="#">编辑</a>&nbsp;&nbsp;|
-                <a href="#">停用</a>&nbsp;&nbsp;|
-                <a href="#">删除</a>
-            </td>
-        </tr>
+        {{end}}
     </tbody>
 </table>

@@ -18,6 +18,9 @@ type UserController struct {
 
 // 用户列表
 func (u *UserController) Index() {
+	u.Data["users"] = models.List()
+	u.Data["status"] = models.Status()
+	u.Data["roles"] = models.Roles()
 	u.Layout = "base.html"
 	u.TplName = "user/index.html"
 }
@@ -61,6 +64,8 @@ func (u *UserController) Create() {
 		fmt.Println("end save")
 	}
 	u.Data["roles"] = models.Roles()
+	u.Data["user"] = models.User{}
+	u.Data["isNewRecord"] = true
 	u.Layout = "base.html"
 	u.TplName = "user/create.html"
 }
@@ -91,6 +96,26 @@ func (u *UserController) View() {
 
 // 用户编辑
 func (u *UserController) Update() {
+	id, err := strconv.Atoi(u.Ctx.Input.Param(":id"))
+	if err != nil {
+		u.Redirect("/user", 302)
+	}
+	if id > 0 {
+		user, err := models.Info(int64(id))
+		if err != nil {
+			u.Ctx.WriteString(fmt.Sprintf("用户%d信息为空", id))
+		} else {
+			u.Data["user"] = user
+			u.Data["isNewRecord"] = false
+			u.Layout = "base.html"
+			u.TplName = "/user/update.html"
+		}
+	} else {
+		u.Ctx.WriteString(fmt.Sprintf("用户%d不存在", id))
+	}
+}
+
+func (u *UserController) Stop() {
 
 }
 

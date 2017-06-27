@@ -85,6 +85,15 @@ func Save(u *User) (*User, error) {
 	return u, nil
 }
 
+// List 用户列表
+func List() []*User {
+	var user User
+	var users []*User
+	o := orm.NewOrm()
+	o.QueryTable(user).RelatedSel().Filter("Status", 1).All(&users)
+	return users
+}
+
 // Info 用户信息
 func Info(id int64) (User, error) {
 	var u User
