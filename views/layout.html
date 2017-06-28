@@ -14,12 +14,11 @@
     <link rel="stylesheet" type="text/css" href="/static/css/screen.css" />
 </head>
 <body class="home-template">
-    <header class="main-header" style="background-image: url(http://image.golaravel.com/5/c9/44e1c4e50d55159c65da6a41bc07e.jpg)">
+    <header class="main-header" style="background: green">
         <div class="container">
             <div class="row">
                 <div class="col-xs-12">
                     <h1>有人住高楼,有人在深沟;有人光万丈,有人一身锈;世人万千种,浮云莫去求;斯人若彩虹,遇上方知有.</h1>
-                    <img src="http://image.golaravel.com/e/b0/4e4bd788405aab87f03d26edc4ab4.png" alt="Laravel" class="hide" />
                 </div>
             </div>
         </div>
@@ -33,8 +32,9 @@
                     </div>
                     <div class="collapse navbar-collapse" id="main-menu">
                         <ul class="menu">
-                            <li role="presentation"><a href="/" title="首页">首页</a></li>
-                            <li role="presentation" style="font-weight: bold"><a href="https://pkg.phpcomposer.com/" title="Packagist 中国镜像" target="_blank">Packagist 中国镜像</a></li>
+                            {{range .menus}}
+                                <li role="presentation"><a href="{{.Url}}" title="{{.Name}}">{{.Name}}</a></li>
+                            {{end}}
                         </ul>
                     </div>
                 </div>

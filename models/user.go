@@ -40,7 +40,7 @@ func RoleDesc(id int) string {
 }
 
 // Status 用户状态
-func Status() map[int]string {
+func UserStatus() map[int]string {
 	return map[int]string{
 		1: "可用",
 		2: "不可用",
@@ -48,8 +48,8 @@ func Status() map[int]string {
 }
 
 // StatusDesc 用户状态描述
-func StatusDesc(id int) string {
-	if status, ok := Status()[id]; ok {
+func UserStatusDesc(id int) string {
+	if status, ok := UserStatus()[id]; ok {
 		return status
 	}
 	return "未知"
@@ -70,7 +70,7 @@ func Password(password string, salt string) string {
 
 // Save 保存用户信息
 // 返回用户信息和错误信息
-func Save(u *User) (int64, error) {
+func UserSave(u *User) (int64, error) {
 	o := orm.NewOrm()
 	u.Salt = Salt()
 	u.Password = Password(u.Password, u.Salt)
@@ -81,7 +81,7 @@ func Save(u *User) (int64, error) {
 }
 
 // Update 更新用户信息
-func Update(u *User) (int64, error) {
+func UserUpdate(u *User) (int64, error) {
 	o := orm.NewOrm()
 	// 如果密码不为空, 则修改密码
 	if u.Password != "" {
@@ -96,7 +96,7 @@ func Update(u *User) (int64, error) {
 }
 
 // List 用户列表
-func List() []*User {
+func UserList() []*User {
 	var user User
 	var users []*User
 	o := orm.NewOrm()
@@ -105,9 +105,28 @@ func List() []*User {
 }
 
 // Info 用户信息
-func Info(id int64) (User, error) {
+func UserInfo(id int64) (User, error) {
 	var u User
 	o := orm.NewOrm()
 	err := o.QueryTable(u).RelatedSel().Filter("Id", id).One(&u)
 	return u, err
 }
+
+/**
+ CREATE TABLE `user` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `nickname` varchar(120) NOT NULL DEFAULT '' COMMENT '昵称',
+  `email` varchar(120) NOT NULL DEFAULT '' COMMENT '邮箱',
+  `password` varchar(128) NOT NULL DEFAULT '' COMMENT '密码',
+  `salt` varchar(120) NOT NULL DEFAULT '#-@,//' COMMENT '盐',
+  `role` tinyint(1) NOT NULL DEFAULT '2' COMMENT '角色1为管理员2为普通用户',
+  `token` varchar(128) NOT NULL DEFAULT '' COMMENT '重置密码用',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态1为可用0为不可用',
+  `ctime` int(10) NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `utime` int(10) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `role` (`role`),
+  KEY `status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='用户表'
+ */

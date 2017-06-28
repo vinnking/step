@@ -2,6 +2,7 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/astaxie/beego"
 
 	"step/models"
-	"fmt"
 )
 
 type UserController struct {
@@ -18,8 +18,8 @@ type UserController struct {
 
 // Index 用户列表
 func (u *UserController) Index() {
-	u.Data["users"] = models.List()
-	u.Data["status"] = models.Status()
+	u.Data["users"] = models.UserList()
+	u.Data["status"] = models.UserStatus()
 	u.Data["roles"] = models.Roles()
 	u.Layout = "base.html"
 	u.TplName = "user/index.html"
@@ -50,7 +50,7 @@ func (u *UserController) Create() {
 			u.Redirect("/user/create", 302)
 		}
 		var id int64
-		if id, err = models.Save(&models.User{
+		if id, err = models.UserSave(&models.User{
 			Nickname: nickname,
 			Email:    email,
 			Password: password,
@@ -58,7 +58,7 @@ func (u *UserController) Create() {
 		}); err != nil {
 			u.Redirect("/user/create", 302)
 		}
-		u.Redirect("/user/" + strconv.FormatInt(id, 10), 302)
+		u.Redirect("/user/"+strconv.FormatInt(id, 10), 302)
 	}
 	u.Data["roles"] = models.Roles()
 	u.Data["user"] = models.User{}
@@ -73,13 +73,13 @@ func (u *UserController) View() {
 	if err != nil || id <= 0 {
 		u.Redirect("/user", 302)
 	}
-	user, err := models.Info(int64(id))
+	user, err := models.UserInfo(int64(id))
 	if err != nil {
 		u.Redirect("/user", 302)
 	}
 	u.Data["user"] = user
 	u.Data["role"] = models.RoleDesc(user.Role)
-	u.Data["status"] = models.StatusDesc(user.Status)
+	u.Data["status"] = models.UserStatusDesc(user.Status)
 	u.Data["ctime"] = time.Unix(user.Ctime, 0).Format("2006-01-02 15:04:05")
 	u.Data["utime"] = time.Unix(user.Utime, 0).Format("2006-01-02 15:04:05")
 	u.Layout = "base.html"
@@ -92,7 +92,7 @@ func (u *UserController) Update() {
 	if err != nil || id <= 0 {
 		u.Redirect("/user", 302)
 	}
-	user, err := models.Info(int64(id))
+	user, err := models.UserInfo(int64(id))
 	if err != nil {
 		u.Redirect("/user", 302)
 	}
@@ -109,7 +109,7 @@ func (u *UserController) Update() {
 		user.Password = strings.TrimSpace(password)
 		user.Role = role
 		var newId int64
-		if newId, err = models.Update(&user); err != nil {
+		if newId, err = models.UserUpdate(&user); err != nil {
 			u.Redirect("/user/update/"+strconv.FormatInt(newId, 10), 302)
 		}
 		u.Redirect("/user/"+strconv.FormatInt(newId, 10), 302)
@@ -128,12 +128,12 @@ func (u *UserController) Delete() {
 	if err != nil || id <= 0 {
 		u.Redirect("/user", 302)
 	}
-	user, err := models.Info(int64(id))
+	user, err := models.UserInfo(int64(id))
 	if err != nil {
 		u.Redirect("/user", 302)
 	}
 	user.Status = 2
-	if _, err := models.Update(&user); err != nil {
+	if _, err := models.UserUpdate(&user); err != nil {
 		fmt.Println(err)
 	}
 	u.Redirect("/user", 302)

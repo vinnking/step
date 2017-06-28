@@ -12,6 +12,7 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", "root:@/step")
 	orm.RegisterModel(
 		new(models.User),
+		new(models.Quote),
 	)
 }
 

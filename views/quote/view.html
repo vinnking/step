@@ -1,0 +1,51 @@
+<ol class="breadcrumb">
+	<li><a href="#">首页</a></li>
+	<li><a href="#">内容</a></li>
+	<li><a href="/quote">引用</a></li>
+	<li class="active">详情</li>
+</ol>
+
+<p>
+	<a class="btn btn-primary" href="/quote/create">添加</a>
+	<a class="btn btn-info" href="/quote/update/{{.quote.Id}}">修改</a>
+	<a class="btn btn-danger" href="/quote/delete/{{.quote.Id}}">删除</a>
+</p>
+
+<table class="table table-bordered table-responsive">
+	<thead>
+	<tr>
+		<th width="10%">属性</th>
+		<th width="90%">名称</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>Id</td>
+		<td>{{.quote.Id}}</td>
+	</tr>
+	<tr>
+		<td>作者</td>
+		<td>{{.quote.Author}}</td>
+	</tr>
+	<tr>
+		<td>内容</td>
+		<td>{{.quote.Content}}</td>
+	</tr>
+	<tr>
+		<td>说明</td>
+		<td>{{.quote.Extra}}</td>
+	</tr>
+	<tr>
+		<td>状态</td>
+		<td>{{.status}}</td>
+	</tr>
+	<tr>
+		<td>创建时间</td>
+		<td>{{.ctime}}</td>
+	</tr>
+	<tr>
+		<td>更新时间</td>
+		<td>{{.utime}}</td>
+	</tr>
+	</tbody>
+</table>
