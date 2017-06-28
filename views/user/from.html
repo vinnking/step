@@ -1,11 +1,11 @@
-<form method="post" action="/user/create">
+<form method="post" action="/user/{{if .isNewRecord}}create{{else}}update/{{.user.Id}}{{end}}">
     <div class="form-group">
         <label for="nickname">昵称(显示用, 可不唯一)</label>
-        <input type="text" class="form-control" id="nickname" name="nickname" value="{{.Nickname}}" placeholder="请输入昵称">
+        <input type="text" class="form-control" id="nickname" name="nickname" value="{{.user.Nickname}}" placeholder="请输入昵称">
     </div>
     <div class="form-group">
         <label for="email">邮箱(查询用, 必须唯一)</label>
-        <input type="email" class="form-control" id="email" name="email" value="{{.Email}}" placeholder="请输入邮箱">
+        <input type="email" class="form-control" id="email" name="email" value="{{.user.Email}}" placeholder="请输入邮箱">
     </div>
     <div class="form-group">
         <label for="password">密码</label>
@@ -15,9 +15,14 @@
         <label for="role">角色</label>
         <select class="form-control" id="role" name="role">
             {{range $index, $role := .roles}}
-                <option value="{{$index}}">{{$role}}</option>
+                <option id="role_{{$index}}"  value="{{$index}}">{{$role}}</option>
             {{end}}
         </select>
     </div>
     <button type="submit" class="btn btn-primary">{{if .isNewRecord}}添加{{else}}编辑{{end}}</button>
 </form>
+<script type="text/javascript">
+    $(function () {
+	    $("#role_{{.user.Role}}").attr("selected", "selected");
+    });
+</script>

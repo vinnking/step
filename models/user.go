@@ -70,19 +70,29 @@ func Password(password string, salt string) string {
 
 // Save 保存用户信息
 // 返回用户信息和错误信息
-func Save(u *User) (*User, error) {
+func Save(u *User) (int64, error) {
 	o := orm.NewOrm()
 	u.Salt = Salt()
 	u.Password = Password(u.Password, u.Salt)
 	u.Status = 1
 	u.Ctime = time.Now().Unix()
 	u.Utime = time.Now().Unix()
-	id, err := o.Insert(u)
-	if err != nil {
-		return u, err
+	return o.Insert(u)
+}
+
+// Update 更新用户信息
+func Update(u *User) (int64, error) {
+	o := orm.NewOrm()
+	// 如果密码不为空, 则修改密码
+	if u.Password != "" {
+		u.Salt = Salt()
+		u.Password = Password(u.Password, u.Salt)
 	}
-	u.Id = id
-	return u, nil
+	u.Utime = time.Now().Unix()
+	if _, err := o.Update(u); err != nil {
+		return u.Id, err
+	}
+	return u.Id, nil
 }
 
 // List 用户列表
