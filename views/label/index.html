@@ -25,7 +25,7 @@
             <td>{{.Id}}</td>
             <td>{{.Name}}</td>
             <td>{{.Content}}</td>
-            <td>{{.Status}}</td>
+            <td>{{index $.status .Status}}</td>
             <td>
                 <a href="/label/{{.Id}}">查看</a>&nbsp;&nbsp;|
                 <a href="/label/update/{{.Id}}">编辑</a>&nbsp;&nbsp;|

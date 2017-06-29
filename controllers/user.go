@@ -27,7 +27,6 @@ func (u *UserController) Index() {
 
 // Create 添加用户
 func (u *UserController) Create() {
-	beego.ReadFromRequest(&u.Controller)
 	if u.Ctx.Request.Method == "POST" {
 		nickname := u.Input().Get("nickname")
 		email := u.Input().Get("email")
@@ -60,6 +59,7 @@ func (u *UserController) Create() {
 		}
 		u.Redirect("/user/"+strconv.FormatInt(id, 10), 302)
 	}
+	
 	u.Data["roles"] = models.Roles()
 	u.Data["user"] = models.User{}
 	u.Data["isNewRecord"] = true
@@ -96,6 +96,7 @@ func (u *UserController) Update() {
 	if err != nil {
 		u.Redirect("/user", 302)
 	}
+	
 	if u.Ctx.Request.Method == "POST" {
 		nickname := u.Input().Get("nickname")
 		email := u.Input().Get("email")

@@ -3,7 +3,7 @@ package models
 
 import (
 	"time"
-	
+
 	"github.com/astaxie/beego/orm"
 )
 
@@ -43,7 +43,7 @@ func QuoteSave(q *Quote) (int64, error) {
 }
 
 // QuoteUpdate 更新引用
-func QuoteUpdate(q * Quote) (int64, error) {
+func QuoteUpdate(q *Quote) (int64, error) {
 	o := orm.NewOrm()
 	q.Utime = time.Now().Unix()
 	if _, err := o.Update(q); err != nil {

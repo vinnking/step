@@ -3,10 +3,12 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/astaxie/beego"
-	"step/models"
 	"strconv"
 	"strings"
+
+	"github.com/astaxie/beego"
+
+	"step/models"
 )
 
 type LabelController struct {
@@ -16,6 +18,7 @@ type LabelController struct {
 // Index 标签列表
 func (l *LabelController) Index() {
 	l.Data["labels"] = models.LabelList()
+	l.Data["status"] = models.LinkStatus()
 	l.Layout = "base.html"
 	l.TplName = "label/index.html"
 }
@@ -41,6 +44,7 @@ func (l *LabelController) Create() {
 		}
 		l.Redirect("/label/"+strconv.FormatInt(id, 10), 302)
 	}
+	
 	l.Data["isNewRecord"] = true
 	l.Data["label"] = models.Label{}
 	l.Layout = "base.html"
@@ -73,6 +77,7 @@ func (l *LabelController) Update() {
 	if err != nil {
 		l.Redirect("/label ", 302)
 	}
+	
 	if l.Ctx.Request.Method == "POST" {
 		label.Name = strings.TrimSpace(l.Input().Get("name"))
 		label.Content = strings.TrimSpace(l.Input().Get("content"))
@@ -82,6 +87,7 @@ func (l *LabelController) Update() {
 		}
 		l.Redirect("/label/"+strconv.FormatInt(newId, 10), 302)
 	}
+	
 	l.Data["isNewRecord"] = false
 	l.Data["label"] = label
 	l.Layout = "base.html"

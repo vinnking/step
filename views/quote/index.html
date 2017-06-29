@@ -27,7 +27,7 @@
             <td>{{.Author}}</td>
             <td>{{.Content}}</td>
             <td>{{.Extra}}</td>
-            <td>{{.Status}}</td>
+            <td>{{index $.status .Status}}</td>
             <td>
                 <a href="/quote/{{.Id}}">查看</a>&nbsp;&nbsp;|
                 <a href="/quote/update/{{.Id}}">编辑</a>&nbsp;&nbsp;|

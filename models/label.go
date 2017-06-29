@@ -36,7 +36,7 @@ func LabelSave(l *Label) (int64, error) {
 }
 
 // LabelUpdate 更新标签
-func LabelUpdate(l * Label) (int64, error) {
+func LabelUpdate(l *Label) (int64, error) {
 	o := orm.NewOrm()
 	if _, err := o.Update(l); err != nil {
 		return l.Id, err

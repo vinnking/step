@@ -1,0 +1,43 @@
+<ol class="breadcrumb">
+	<li><a href="#">首页</a></li>
+	<li><a href="#">内容管理</a></li>
+	<li><a href="/link">友情链接</a></li>
+	<li class="active">详情</li>
+</ol>
+
+<p>
+	<a class="btn btn-primary" href="/link/create">添加</a>
+	<a class="btn btn-info" href="/link/update/{{.link.Id}}">修改</a>
+	<a class="btn btn-danger" href="/link/delete/{{.link.Id}}">删除</a>
+</p>
+
+<table class="table table-bordered table-responsive">
+	<thead>
+	<tr>
+		<th width="10%">属性</th>
+		<th width="90%">名称</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>Id</td>
+		<td>{{.link.Id}}</td>
+	</tr>
+	<tr>
+		<td>类型</td>
+		<td>{{.type}}</td>
+	</tr>
+	<tr>
+		<td>名字</td>
+		<td>{{.link.Title}}</td>
+	</tr>
+	<tr>
+		<td>说明</td>
+		<td>{{.link.Content}}</td>
+	</tr>
+	<tr>
+		<td>状态</td>
+		<td>{{.status}}</td>
+	</tr>
+	</tbody>
+</table>

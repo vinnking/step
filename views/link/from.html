@@ -1,0 +1,30 @@
+<form method="post" action="/link/{{if .isNewRecord}}create{{else}}update/{{.link.Id}}{{end}}">
+    <div class="form-group">
+        <label for="type">类型</label>
+        <select class="form-control" id="type" name="type">
+            {{range $index, $type := .types}}
+            <option id="type_{{$index}}"  value="{{$index}}">{{$type}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="title">标题</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{.link.Title}}" placeholder="请输入标题">
+    </div>
+    <div class="form-group">
+        <label for="url">地址</label>
+        <input type="text" class="form-control" id="url" name="url" value="{{.link.Url}}" placeholder="请输入标题">
+    </div>
+    <div class="form-group">
+        <label for="content">描述</label>
+        <textarea class="form-control" id="content" name="content" cols="15" rows="4">{{.link.Content}}</textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">{{if .isNewRecord}}添加{{else}}编辑{{end}}</button>
+    </div>
+</form>
+<script type="text/javascript">
+	$(function () {
+		$("#type_{{.link.Type}}").attr("selected", "selected");
+	});
+</script>

@@ -16,6 +16,7 @@ func init() {
 		new(models.User),
 		new(models.Quote),
 		new(models.Label),
+		new(models.Link),
 	)
 }
 

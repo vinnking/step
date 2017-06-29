@@ -129,4 +129,4 @@ func UserInfo(id int64) (User, error) {
   KEY `role` (`role`),
   KEY `status` (`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='用户表'
- */
+*/

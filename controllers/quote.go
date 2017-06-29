@@ -19,6 +19,7 @@ type QuoteController struct {
 // Index 引用列表
 func (q *QuoteController) Index() {
 	q.Data["quotes"] = models.QuoteList()
+	q.Data["status"] = models.QuoteStatus()
 	q.Layout = "base.html"
 	q.TplName = "quote/index.html"
 }
@@ -84,6 +85,7 @@ func (q *QuoteController) Update() {
 	if err != nil {
 		q.Redirect("/quote ", 302)
 	}
+	
 	if q.Ctx.Request.Method == "POST" {
 		quote.Content = strings.TrimSpace(q.Input().Get("content"))
 		quote.Extra = strings.TrimSpace(q.Input().Get("extra"))
@@ -94,7 +96,7 @@ func (q *QuoteController) Update() {
 		}
 		q.Redirect("/quote/"+strconv.FormatInt(newId, 10), 302)
 	}
-	
+
 	q.Data["isNewRecord"] = false
 	q.Data["quote"] = quote
 	q.Layout = "base.html"
