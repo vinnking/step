@@ -15,6 +15,7 @@ func init() {
 	orm.RegisterModel(
 		new(models.User),
 		new(models.Quote),
+		new(models.Label),
 	)
 }
 

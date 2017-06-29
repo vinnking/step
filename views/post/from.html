@@ -1,0 +1,17 @@
+<form method="post" action="/quote/{{if .isNewRecord}}create{{else}}update/{{.quote.Id}}{{end}}">
+    <div class="form-group">
+        <label for="author">作者</label>
+        <input type="text" class="form-control" id="author" name="author" value="{{.quote.Author}}" placeholder="请输入作者" {{if .isNewRecord}}{{else}}readonly{{end}}>
+    </div>
+    <div class="form-group">
+        <label for="content">内容</label>
+        <textarea class="form-control" id="content" name="content" cols="15" rows="4">{{.quote.Content}}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="extra">解释</label>
+        <textarea class="form-control" id="extra" name="extra" cols="15" rows="4">{{.quote.Extra}}</textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">{{if .isNewRecord}}添加{{else}}编辑{{end}}</button>
+    </div>
+</form>

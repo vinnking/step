@@ -1,39 +1,39 @@
 <ol class="breadcrumb">
 	<li><a href="#">首页</a></li>
 	<li><a href="#">内容管理</a></li>
-	<li><a href="/user">用户</a></li>
+	<li><a href="/post">文章</a></li>
 	<li class="active">详情</li>
 </ol>
 
 <p>
-	<a class="btn btn-primary" href="/user/create">添加</a>
-	<a class="btn btn-info" href="/user/update/{{.user.Id}}">修改</a>
-	<a class="btn btn-danger" href="/user/delete/{{.user.Id}}">删除</a>
+	<a class="btn btn-primary" href="/post/create">添加</a>
+	<a class="btn btn-info" href="/post/update/{{.quote.Id}}">修改</a>
+	<a class="btn btn-danger" href="/post/delete/{{.quote.Id}}">删除</a>
 </p>
 
 <table class="table table-bordered table-responsive">
 	<thead>
 	<tr>
-		<th>属性</th>
-		<th>名称</th>
+		<th width="10%">属性</th>
+		<th width="90%">名称</th>
 	</tr>
 	</thead>
 	<tbody>
 	<tr>
 		<td>Id</td>
-		<td>{{.user.Id}}</td>
+		<td>{{.quote.Id}}</td>
 	</tr>
 	<tr>
-		<td>昵称</td>
-		<td>{{.user.Nickname}}</td>
+		<td>作者</td>
+		<td>{{.quote.Author}}</td>
 	</tr>
 	<tr>
-		<td>邮箱</td>
-		<td>{{.user.Email}}</td>
+		<td>内容</td>
+		<td>{{.quote.Content}}</td>
 	</tr>
 	<tr>
-		<td>角色</td>
-		<td>{{.role}}</td>
+		<td>说明</td>
+		<td>{{.quote.Extra}}</td>
 	</tr>
 	<tr>
 		<td>状态</td>

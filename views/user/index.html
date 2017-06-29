@@ -1,6 +1,6 @@
 <ol class="breadcrumb">
     <li><a href="#">首页</a></li>
-    <li><a href="#">内容</a></li>
+    <li><a href="#">内容管理</a></li>
     <li class="active">用户</li>
 </ol>
 
@@ -29,6 +29,7 @@
             <td>{{.Role}}</td>
             <td>{{.Status}}</td>
             <td>
+                <a href="/user/{{.Id}}">查看</a>&nbsp;&nbsp;|
                 <a href="/user/update/{{.Id}}">编辑</a>&nbsp;&nbsp;|
                 <a href="javascript:if(confirm('确定删除吗?')) location.href='/user/delete/{{.Id}}'">删除</a>
             </td>

@@ -1,0 +1,37 @@
+<ol class="breadcrumb">
+    <li><a href="#">首页</a></li>
+    <li><a href="#">设置</a></li>
+    <li class="active">标签</li>
+</ol>
+
+<p>
+    <a class="btn btn-primary" href="/label/create">添加</a>
+</p>
+
+<p class="text-info">共搜索到 <a class="text-success">{{.labels | len}}</a> 条符合条件的记录。</p>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th width="10%">ID</th>
+            <th width="20%">名称</th>
+            <th width="45%">描述</th>
+            <th width="10%">状态</th>
+            <th width="15%">操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .labels}}
+        <tr>
+            <td>{{.Id}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.Content}}</td>
+            <td>{{.Status}}</td>
+            <td>
+                <a href="/label/{{.Id}}">查看</a>&nbsp;&nbsp;|
+                <a href="/label/update/{{.Id}}">编辑</a>&nbsp;&nbsp;|
+                <a href="javascript:if(confirm('确定删除吗?')) location.href='/label/delete/{{.Id}}'">删除</a>
+            </td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
