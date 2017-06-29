@@ -46,7 +46,10 @@ func QuoteSave(q *Quote) (int64, error) {
 func QuoteUpdate(q * Quote) (int64, error) {
 	o := orm.NewOrm()
 	q.Utime = time.Now().Unix()
-	return o.Update(q)
+	if _, err := o.Update(q); err != nil {
+		return q.Id, err
+	}
+	return q.Id, nil
 }
 
 // QuoteList 引用列表

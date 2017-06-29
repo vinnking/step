@@ -1,9 +1,11 @@
 package main
 
 import (
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
-	_ "github.com/go-sql-driver/mysql"
+
 	"step/models"
 	_ "step/routers"
 )

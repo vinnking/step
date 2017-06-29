@@ -64,7 +64,7 @@ func (q *QuoteController) View() {
 	}
 	quote, err := models.QuoteInfo(int64(id))
 	if err != nil {
-		q.Redirect("/user", 302)
+		q.Redirect("/quote ", 302)
 	}
 	q.Data["quote"] = quote
 	q.Data["status"] = models.QuoteStatusDesc(quote.Status)
@@ -76,6 +76,27 @@ func (q *QuoteController) View() {
 
 // Update 编辑引用
 func (q *QuoteController) Update() {
+	id, err := strconv.Atoi(q.Ctx.Input.Param(":id"))
+	if err != nil || id <= 0 {
+		q.Redirect("/quote", 302)
+	}
+	quote, err := models.QuoteInfo(int64(id))
+	if err != nil {
+		q.Redirect("/quote ", 302)
+	}
+	if q.Ctx.Request.Method == "POST" {
+		quote.Content = strings.TrimSpace(q.Input().Get("content"))
+		quote.Extra = strings.TrimSpace(q.Input().Get("extra"))
+		var newId int64
+		var err error
+		if newId, err = models.QuoteUpdate(&quote); err != nil {
+			q.Redirect("/quote/update/"+strconv.FormatInt(newId, 10), 302)
+		}
+		q.Redirect("/quote/"+strconv.FormatInt(newId, 10), 302)
+	}
+	
+	q.Data["isNewRecord"] = false
+	q.Data["quote"] = quote
 	q.Layout = "base.html"
 	q.TplName = "quote/update.html"
 }
