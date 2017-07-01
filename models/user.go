@@ -5,8 +5,11 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -112,7 +115,34 @@ func UserInfo(id int64) (User, error) {
 	return u, err
 }
 
-/**
+// UserCheck 检查用户是否存在
+func UserCheck(email string, password string) (User, error) {
+	var u User
+	o := orm.NewOrm()
+	salt := Salt()
+	err := o.QueryTable(u).RelatedSel().Filter("Email", email).Filter("Status", 1).Filter("Password", Password(password, salt)).One(&u)
+	return u, err
+}
+
+// IsLogin 用户是否登陆, 无登陆直接跳转至登录页
+func IsLogin(ctx *context.Context) (bool, User) {
+	userId, ok := ctx.GetSecureCookie(beego.AppConfig.String("cookie.secure"), beego.AppConfig.String("cookie.token"))
+	var user User
+	if !ok {
+		ctx.Redirect(302, "/auth/login")
+	}
+	newUserId, err := strconv.Atoi(userId)
+	if err != nil {
+		ctx.Redirect(302, "/auth/login")
+	}
+	user, err = UserInfo(int64(newUserId))
+	if err != nil {
+		ctx.Redirect(302, "/auth/login")
+	}
+	return ok, user
+}
+
+/*
 CREATE TABLE `user` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `nickname` varchar(120) NOT NULL DEFAULT '' COMMENT '昵称',

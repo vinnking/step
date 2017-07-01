@@ -10,6 +10,10 @@ func init() {
 	// 首页
 	beego.Router("/?:id([0-9]+)", &controllers.MainController{})
 	beego.Router("/view/:id([0-9]+)", &controllers.MainController{}, "GET:View")
+	
+	// 管理员登陆和退出
+	beego.Router("/auth/login", &controllers.AuthController{}, "GET,POST:Login")
+	beego.Router("/auth/logout", &controllers.AuthController{}, "GET,POST:Logout")
 
 	// 用户, 列表, 添加, 明细, 更新, 停用
 	beego.Router("/user", &controllers.UserController{}, "GET:Index")

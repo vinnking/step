@@ -16,6 +16,12 @@ type QuoteController struct {
 	beego.Controller
 }
 
+// 检查用户是否登陆
+func (q *QuoteController) Prepare() {
+	_, user := models.IsLogin(q.Ctx)
+	q.Data["nickname"] = user.Nickname
+}
+
 // Index 引用列表
 func (q *QuoteController) Index() {
 	q.Data["quotes"] = models.QuoteList()
@@ -85,7 +91,7 @@ func (q *QuoteController) Update() {
 	if err != nil {
 		q.Redirect("/quote ", 302)
 	}
-	
+
 	if q.Ctx.Request.Method == "POST" {
 		quote.Content = strings.TrimSpace(q.Input().Get("content"))
 		quote.Extra = strings.TrimSpace(q.Input().Get("extra"))

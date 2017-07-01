@@ -61,7 +61,7 @@ func LabelInfo(id int64) (Label, error) {
 	return l, err
 }
 
-/**
+/*
 CREATE TABLE `label` (
  `id` int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
  `name` varchar(120) NOT NULL,

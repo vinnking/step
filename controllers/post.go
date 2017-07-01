@@ -16,6 +16,12 @@ type PostController struct {
 	beego.Controller
 }
 
+// 检查用户是否登陆
+func (p *PostController) Prepare() {
+	_, user := models.IsLogin(p.Ctx)
+	p.Data["nickname"] = user.Nickname
+}
+
 // Index 文章列表
 func (p *PostController) Index() {
 	p.Data["posts"] = models.PostList()

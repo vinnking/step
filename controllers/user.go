@@ -16,6 +16,12 @@ type UserController struct {
 	beego.Controller
 }
 
+// 检查用户是否登陆
+func (u *UserController) Prepare() {
+	_, user := models.IsLogin(u.Ctx)
+	u.Data["nickname"] = user.Nickname
+}
+
 // Index 用户列表
 func (u *UserController) Index() {
 	u.Data["users"] = models.UserList()
@@ -59,7 +65,7 @@ func (u *UserController) Create() {
 		}
 		u.Redirect("/user/"+strconv.FormatInt(id, 10), 302)
 	}
-	
+
 	u.Data["roles"] = models.Roles()
 	u.Data["user"] = models.User{}
 	u.Data["isNewRecord"] = true
@@ -96,7 +102,7 @@ func (u *UserController) Update() {
 	if err != nil {
 		u.Redirect("/user", 302)
 	}
-	
+
 	if u.Ctx.Request.Method == "POST" {
 		nickname := u.Input().Get("nickname")
 		email := u.Input().Get("email")

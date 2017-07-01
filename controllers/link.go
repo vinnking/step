@@ -15,6 +15,12 @@ type LinkController struct {
 	beego.Controller
 }
 
+// 检查用户是否登陆
+func (l *LinkController) Prepare() {
+	_, user := models.IsLogin(l.Ctx)
+	l.Data["nickname"] = user.Nickname
+}
+
 // Index 友情链接列表
 func (l *LinkController) Index() {
 	l.Data["links"] = models.LinkList()
@@ -92,7 +98,7 @@ func (l *LinkController) Update() {
 	if err != nil {
 		l.Redirect("/link ", 302)
 	}
-	
+
 	if l.Ctx.Request.Method == "POST" {
 		typeId, err := strconv.Atoi(strings.TrimSpace(l.Input().Get("type")))
 		if err != nil {
@@ -108,7 +114,7 @@ func (l *LinkController) Update() {
 		}
 		l.Redirect("/link/"+strconv.FormatInt(newId, 10), 302)
 	}
-	
+
 	l.Data["isNewRecord"] = false
 	l.Data["link"] = link
 	l.Data["types"] = models.LinkTypeList()
