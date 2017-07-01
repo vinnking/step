@@ -114,7 +114,7 @@ CREATE TABLE `post` (
   `title` varchar(120) NOT NULL COMMENT '标题',
   `type` tinyint(1) NOT NULL DEFAULT '1' COMMENT '类型',
   `url` varchar(255) NOT NULL DEFAULT '' COMMENT '文件路径',
-  `Image_url` varchar(255) NOT NULL DEFAULT '' COMMENT '图片路径',
+  `image_url` varchar(255) NOT NULL DEFAULT '' COMMENT '图片路径',
   `summary` varchar(255) NOT NULL COMMENT '摘要',
   `user_id` int(11) NOT NULL DEFAULT '0' COMMENT '作者',
   `read_count` int(11) NOT NULL DEFAULT '0' COMMENT '阅读次数',
