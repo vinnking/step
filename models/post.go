@@ -63,7 +63,7 @@ func PostList() []*Post {
 	var post Post
 	var posts []*Post
 	o := orm.NewOrm()
-	o.QueryTable(post).RelatedSel().Filter("Status", 1).All(&posts)
+	o.QueryTable(post).RelatedSel().Filter("Status", 1).OrderBy("-Id").All(&posts)
 	return posts
 }
 

@@ -34,6 +34,7 @@ func (m *MainController) Get() {
 	}
 	m.Data["quote"] = models.QuoteOne()
 	m.Data["menus"] = menuList
+	m.Data["cateId"] = cateId
 	m.Data["posts"] = models.PostList()
 	m.Data["recent"] = models.PostRecent()
 	m.Data["labels"] = models.LabelList()
@@ -55,6 +56,7 @@ func (m *MainController) View() {
 	menuList := models.MenuList()
 	m.Data["quote"] = models.QuoteOne()
 	m.Data["menus"] = menuList
+	m.Data["cateId"] = post.Type
 	m.Data["recent"] = models.PostRecent()
 	m.Data["labels"] = models.LabelList()
 	m.Data["links"] = models.LinkList()

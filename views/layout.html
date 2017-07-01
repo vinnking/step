@@ -34,7 +34,7 @@
                     <div class="collapse navbar-collapse" id="main-menu">
                         <ul class="menu">
                             {{range .menus}}
-                                <li role="presentation"><a href="{{.Url}}" title="{{.Name}}">{{.Name}}</a></li>
+                                <li role="presentation"><a id="cate_{{.Id}}" href="{{.Url}}" title="{{.Name}}">{{.Name}}</a></li>
                             {{end}}
                         </ul>
                     </div>
@@ -110,5 +110,10 @@
     <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="/static/js/markdown.js"></script>
+    <script>
+        $(function () {
+            $("#cate_{{.cateId}}").prop("style", "color: #f4645f; text-decoration: none;");
+        });
+    </script>
 </body>
 </html>

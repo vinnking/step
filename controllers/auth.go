@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego"
+
 	"step/models"
 )
 
@@ -13,7 +14,7 @@ type AuthController struct {
 	beego.Controller
 }
 
-// Login 管理员登陆
+// Login 登陆
 func (a *AuthController) Login() {
 	if a.Ctx.Request.Method == "POST" {
 		email := a.Input().Get("email")
@@ -28,14 +29,32 @@ func (a *AuthController) Login() {
 		if user.Role != 1 || err != nil {
 			a.Redirect("/auth/login", 302)
 		}
-		a.SetSecureCookie(beego.AppConfig.String("cookie.secure"), beego.AppConfig.String("cookie.token"), strconv.Itoa(int(user.Id)), 30*24*60*60, "/", beego.AppConfig.String("cookie.domain"), false, true)
+		a.SetSecureCookie(
+			beego.AppConfig.String("cookie.secure"),
+			beego.AppConfig.String("cookie.token"),
+			strconv.Itoa(int(user.Id)),
+			30*24*60*60,
+			"/",
+			beego.AppConfig.String("cookie.domain"),
+			false,
+			true,
+		)
 		a.Redirect("/post", 302)
 	}
 	a.TplName = "login.html"
 }
 
-// Logout 管理员退出
+// Logout 退出
 func (a *AuthController) Logout() {
-	a.SetSecureCookie(beego.AppConfig.String("cookie.secure"), beego.AppConfig.String("cookie.token"), "", -1, "/", beego.AppConfig.String("cookie.domain"), false, true)
+	a.SetSecureCookie(
+		beego.AppConfig.String("cookie.secure"),
+		beego.AppConfig.String("cookie.token"),
+		"",
+		-1,
+		"/",
+		beego.AppConfig.String("cookie.domain"),
+		false,
+		true,
+	)
 	a.Redirect("/auth/login", 302)
 }
