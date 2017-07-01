@@ -44,6 +44,14 @@ func (m *MainController) Get() {
 
 // View 文章详情
 func (m *MainController) View() {
+	id, err := strconv.Atoi(m.Ctx.Input.Param(":id"))
+	if err != nil || id <= 0 {
+		m.Redirect("/", 302)
+	}
+	post, err := models.PostInfo(int64(id))
+	if err != nil {
+		m.Redirect("/", 302)
+	}
 	menuList := models.MenuList()
 	m.Data["quote"] = models.QuoteOne()
 	m.Data["menus"] = menuList
@@ -51,5 +59,5 @@ func (m *MainController) View() {
 	m.Data["labels"] = models.LabelList()
 	m.Data["links"] = models.LinkList()
 	m.Layout = "layout.html"
-	m.TplName = "stores/travel/2017/haituo.html"
+	m.TplName = post.Url
 }
