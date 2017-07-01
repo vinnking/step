@@ -32,7 +32,12 @@ func (m *MainController) Get() {
 			cateId = length
 		}
 	}
+	m.Data["quote"] = models.QuoteOne()
 	m.Data["menus"] = menuList
+	m.Data["posts"] = models.PostList()
+	m.Data["recent"] = models.PostRecent()
+	m.Data["labels"] = models.LabelList()
+	m.Data["links"] = models.LinkList()
 	m.Layout = "layout.html"
 	m.TplName = "index.html"
 }
@@ -40,7 +45,11 @@ func (m *MainController) Get() {
 // View 文章详情
 func (m *MainController) View() {
 	menuList := models.MenuList()
+	m.Data["quote"] = models.QuoteOne()
 	m.Data["menus"] = menuList
+	m.Data["recent"] = models.PostRecent()
+	m.Data["labels"] = models.LabelList()
+	m.Data["links"] = models.LinkList()
 	m.Layout = "layout.html"
-	m.TplName = "view.html"
+	m.TplName = "stores/travel/2017/haituo.html"
 }

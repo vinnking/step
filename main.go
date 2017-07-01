@@ -18,6 +18,7 @@ func init() {
 		new(models.Label),
 		new(models.Link),
 		new(models.Post),
+		new(models.PostLabel),
 	)
 }
 

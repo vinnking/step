@@ -12,8 +12,22 @@
         </select>
     </div>
     <div class="form-group">
-        <label for="url">路径</label>
-        <input class="form-control" id="url" name="url" value="{{.post.Url}}" placeholder="请输入文件路径">
+        <label for="url">内容路径</label>
+        <input class="form-control" id="url" name="url" value="{{.post.Url}}" placeholder="请输入内容路径">
+    </div>
+    <div class="form-group">
+        <label for="imageUrl">图片路径</label>
+        <input class="form-control" id="imageUrl" name="imageUrl" value="{{.post.ImageUrl}}" placeholder="请输入图片路径">
+    </div>
+    <div class="form-group">
+        <label>标签</label>
+        {{range .labels}}
+        <div class="checkbox">
+            <label for="label_{{.Id}}">
+            <input class="checkbox" type="checkbox" title="{{.Name}}" id="label_{{.Id}}" name="labels" value="{{.Id}}">{{.Name}}
+            </label>
+        </div>
+        {{end}}
     </div>
     <div class="form-group">
         <label for="summary">概要</label>
@@ -27,3 +41,14 @@
         <button type="submit" class="btn btn-primary">{{if .isNewRecord}}添加{{else}}编辑{{end}}</button>
     </div>
 </form>
+<script>
+	$(function () {
+        {{if .isNewRecord}}
+        {{else}}
+		    $("#type_{{.post.Type}}").prop("selected", "selected");
+		    {{range .hasLabels}}
+		        $("#label_{{.Id}}").prop("checked", true);
+		    {{end}}
+        {{end}}
+	});
+</script>

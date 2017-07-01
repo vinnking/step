@@ -113,7 +113,7 @@ func UserInfo(id int64) (User, error) {
 }
 
 /**
- CREATE TABLE `user` (
+CREATE TABLE `user` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `nickname` varchar(120) NOT NULL DEFAULT '' COMMENT '昵称',
   `email` varchar(120) NOT NULL DEFAULT '' COMMENT '邮箱',
@@ -128,5 +128,5 @@ func UserInfo(id int64) (User, error) {
   UNIQUE KEY `email` (`email`),
   KEY `role` (`role`),
   KEY `status` (`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='用户表'
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户表';
 */

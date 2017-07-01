@@ -13,7 +13,7 @@
     <thead>
         <tr>
             <th width="5%">ID</th>
-            <th width="10%">作者</th>
+            <th width="10%">路径</th>
             <th width="25%">标题</th>
             <th width="10%">类型</th>
             <th width="30%">概述</th>
@@ -22,10 +22,10 @@
         </tr>
     </thead>
     <tbody>
-        {{range .quotes}}
+        {{range .posts}}
         <tr>
             <td>{{.Id}}</td>
-            <td>{{.UserId}}</td>
+            <td>{{.Url}}</td>
             <td>{{.Title}}</td>
             <td>{{index $.types .Type}}</td>
             <td>{{.Summary}}</td>

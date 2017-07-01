@@ -25,11 +25,19 @@
 	</tr>
 	<tr>
 		<td>作者</td>
-		<td>{{.post.UserId}}</td>
+		<td>{{.user.Nickname}}</td>
 	</tr>
 	<tr>
-		<td>内容</td>
-		<td>{{.post.Content}}</td>
+		<td>内容路径</td>
+		<td>{{.post.Url}}</td>
+	</tr>
+	<tr>
+		<td>图片路径</td>
+		<td><img src="{{.post.ImageUrl}}"></td>
+	</tr>
+	<tr>
+		<td>标签</td>
+		<td>{{.labels}}</td>
 	</tr>
 	<tr>
 		<td>说明</td>

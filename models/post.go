@@ -4,6 +4,7 @@ package models
 import (
 	"time"
 
+	"fmt"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -12,6 +13,7 @@ type Post struct {
 	Title     string
 	Type      int
 	Url       string
+	ImageUrl  string
 	Summary   string
 	UserId    int64
 	ReadCount int32
@@ -73,12 +75,46 @@ func PostInfo(id int64) (Post, error) {
 	return post, err
 }
 
-/**
+// PostLabelMap 文章关联的标签关联字典
+func PostLabelMap(userId int64, postId int64) map[int64]string {
+	desc := make(map[int64]string)
+	labels := make(map[int64]string)
+	for _, label := range LabelList() {
+		labels[label.Id] = label.Name
+	}
+	for _, postLabel := range PostLabelList(userId, postId) {
+		if d, ok := labels[postLabel.LabelId]; ok {
+			desc[postLabel.LabelId] = d
+		}
+	}
+	return desc
+}
+
+// PostLabelDesc 文章关联的标签描述
+func PostLabelDesc(userId int64, postId int64) string {
+	var desc string
+	for id, label := range PostLabelMap(userId, postId) {
+		desc += fmt.Sprintf("(%d - %s) ", id, label)
+	}
+	return desc
+}
+
+// PostRecent 最新的三篇文章
+func PostRecent() []*Post {
+	var post Post
+	var posts []*Post
+	o := orm.NewOrm()
+	o.QueryTable(post).RelatedSel().Filter("Status", 1).OrderBy("-Id").Limit(3).All(&posts)
+	return posts
+}
+
+/*
 CREATE TABLE `post` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `title` varchar(120) NOT NULL COMMENT '标题',
   `type` tinyint(1) NOT NULL DEFAULT '1' COMMENT '类型',
   `url` varchar(255) NOT NULL DEFAULT '' COMMENT '文件路径',
+  `Image_url` varchar(255) NOT NULL DEFAULT '' COMMENT '图片路径',
   `summary` varchar(255) NOT NULL COMMENT '摘要',
   `user_id` int(11) NOT NULL DEFAULT '0' COMMENT '作者',
   `read_count` int(11) NOT NULL DEFAULT '0' COMMENT '阅读次数',
