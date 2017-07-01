@@ -16,6 +16,15 @@ func MenuList() map[int]Menu {
 	}
 }
 
+// Menus 菜单字典
+func Menus() map[int]string {
+	menu := make(map[int]string)
+	for _, m := range MenuList() {
+		menu[m.Id] = m.Name
+	}
+	return menu
+}
+
 // MenuDesc 菜单描述
 func MenuDesc(id int) Menu {
 	if desc, ok := MenuList()[id]; ok {

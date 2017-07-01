@@ -86,11 +86,11 @@ func (l *LinkController) View() {
 func (l *LinkController) Update() {
 	id, err := strconv.Atoi(l.Ctx.Input.Param(":id"))
 	if err != nil || id <= 0 {
-		l.Redirect("/label", 302)
+		l.Redirect("/link", 302)
 	}
 	link, err := models.LinkInfo(int64(id))
 	if err != nil {
-		l.Redirect("/label ", 302)
+		l.Redirect("/link ", 302)
 	}
 	
 	if l.Ctx.Request.Method == "POST" {

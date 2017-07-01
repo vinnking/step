@@ -17,6 +17,7 @@ func init() {
 		new(models.Quote),
 		new(models.Label),
 		new(models.Link),
+		new(models.Post),
 	)
 }
 

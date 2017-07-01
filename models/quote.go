@@ -78,6 +78,7 @@ CREATE TABLE `quote` (
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态1可用2不可用',
   `ctime` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
   `utime` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `status`(`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 */

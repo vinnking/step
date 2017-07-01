@@ -9,6 +9,7 @@ import (
 func init() {
 	// 首页
 	beego.Router("/?:id([0-9]+)", &controllers.MainController{})
+	beego.Router("/view/:id([0-9]+)", &controllers.MainController{}, "GET:View")
 
 	// 用户, 列表, 添加, 明细, 更新, 停用
 	beego.Router("/user", &controllers.UserController{}, "GET:Index")
@@ -37,4 +38,11 @@ func init() {
 	beego.Router("/link/:id([0-9]+)", &controllers.LinkController{}, "GET,POST:View")
 	beego.Router("/link/update/:id([0-9]+)", &controllers.LinkController{}, "GET,POST:Update")
 	beego.Router("/link/delete/:id([0-9]+)", &controllers.LinkController{}, "GET:Delete")
+	
+	// 文章
+	beego.Router("/post", &controllers.PostController{}, "GET:Index")
+	beego.Router("/post/create", &controllers.PostController{}, "GET,POST:Create")
+	beego.Router("/post/:id([0-9]+)", &controllers.PostController{}, "GET,POST:View")
+	beego.Router("/post/update/:id([0-9]+)", &controllers.PostController{}, "GET,POST:Update")
+	beego.Router("/post/delete/:id([0-9]+)", &controllers.PostController{}, "GET:Delete")
 }

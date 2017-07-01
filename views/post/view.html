@@ -7,8 +7,8 @@
 
 <p>
 	<a class="btn btn-primary" href="/post/create">添加</a>
-	<a class="btn btn-info" href="/post/update/{{.quote.Id}}">修改</a>
-	<a class="btn btn-danger" href="/post/delete/{{.quote.Id}}">删除</a>
+	<a class="btn btn-info" href="/post/update/{{.post.Id}}">修改</a>
+	<a class="btn btn-danger" href="/post/delete/{{.post.Id}}">删除</a>
 </p>
 
 <table class="table table-bordered table-responsive">
@@ -21,19 +21,23 @@
 	<tbody>
 	<tr>
 		<td>Id</td>
-		<td>{{.quote.Id}}</td>
+		<td>{{.post.Id}}</td>
 	</tr>
 	<tr>
 		<td>作者</td>
-		<td>{{.quote.Author}}</td>
+		<td>{{.post.UserId}}</td>
 	</tr>
 	<tr>
 		<td>内容</td>
-		<td>{{.quote.Content}}</td>
+		<td>{{.post.Content}}</td>
 	</tr>
 	<tr>
 		<td>说明</td>
-		<td>{{.quote.Extra}}</td>
+		<td>{{.post.Summary}}</td>
+	</tr>
+	<tr>
+		<td>备注</td>
+		<td>{{.post.Remark}}</td>
 	</tr>
 	<tr>
 		<td>状态</td>

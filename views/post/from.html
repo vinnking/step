@@ -1,15 +1,27 @@
-<form method="post" action="/quote/{{if .isNewRecord}}create{{else}}update/{{.quote.Id}}{{end}}">
+<form method="post" action="/post/{{if .isNewRecord}}create{{else}}update/{{.post.Id}}{{end}}">
     <div class="form-group">
-        <label for="author">作者</label>
-        <input type="text" class="form-control" id="author" name="author" value="{{.quote.Author}}" placeholder="请输入作者" {{if .isNewRecord}}{{else}}readonly{{end}}>
+        <label for="title">标题</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{.post.Title}}" placeholder="请输入标题">
     </div>
     <div class="form-group">
-        <label for="content">内容</label>
-        <textarea class="form-control" id="content" name="content" cols="15" rows="4">{{.quote.Content}}</textarea>
+        <label for="type">类型</label>
+        <select class="form-control" id="type" name="type">
+            {{range $index, $type := .types}}
+            <option id="type_{{$index}}"  value="{{$index}}">{{$type}}</option>
+            {{end}}
+        </select>
     </div>
     <div class="form-group">
-        <label for="extra">解释</label>
-        <textarea class="form-control" id="extra" name="extra" cols="15" rows="4">{{.quote.Extra}}</textarea>
+        <label for="url">路径</label>
+        <input class="form-control" id="url" name="url" value="{{.post.Url}}" placeholder="请输入文件路径">
+    </div>
+    <div class="form-group">
+        <label for="summary">概要</label>
+        <textarea class="form-control" id="summary" name="summary" cols="15" rows="4">{{.post.Summary}}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="remark">备注</label>
+        <textarea class="form-control" id="remark" name="remark" cols="15" rows="4">{{.post.Remark}}</textarea>
     </div>
     <div class="form-group">
         <button type="submit" class="btn btn-primary">{{if .isNewRecord}}添加{{else}}编辑{{end}}</button>

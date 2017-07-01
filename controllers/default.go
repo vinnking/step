@@ -2,21 +2,22 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
-	
-	"step/models"
-	"fmt"
-	"strings"
 	"strconv"
+	"strings"
+
+	"github.com/astaxie/beego"
+
+	"step/models"
 )
 
 type MainController struct {
 	beego.Controller
 }
 
+// Get 首页
 func (m *MainController) Get() {
 	menuList := models.MenuList()
-	
+
 	var cateId int
 	var err error
 	cateId = 1
@@ -31,8 +32,15 @@ func (m *MainController) Get() {
 			cateId = length
 		}
 	}
-	fmt.Println(cateId)
 	m.Data["menus"] = menuList
 	m.Layout = "layout.html"
 	m.TplName = "index.html"
+}
+
+// View 文章详情
+func (m *MainController) View() {
+	menuList := models.MenuList()
+	m.Data["menus"] = menuList
+	m.Layout = "layout.html"
+	m.TplName = "view.html"
 }

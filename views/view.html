@@ -1,0 +1,91 @@
+<main class="col-md-12 main-content">
+	<article class="post">
+		<h1 id="toc_0">Go杂项</h1>
+		
+		<h2 id="toc_1">1、MySQL连接</h2>
+		
+		<div><pre class="line-numbers"><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;database/sql&quot;
+    _ &quot;github.com/go-sql-driver/mysql&quot;
+)
+
+func main() {
+    // 1、连接数据库
+    // go官方仅提供了database package，database package下有两个包sql，sql/driver。
+    // 这两个包用来定义操作数据库的接口，这就保证了无论使用哪种数据库，他们的操作方式都是相同的。
+    // 但go官方并没有提供连接数据库的driver，如果要操作数据库，还需要第三方的driver包，最常用的有：
+    // https://github.com/Go-SQL-Driver/MySQL支持database/sql，全部采用go写。
+    // https://github.com/ziutek/mymysql 支持database/sql，也支持自定义的接口，全部采用go写。
+    // 推荐使用前者，因为前者的效率更高一点。
+    // user:password@tcp(localhost:5555)/dbname?charset=utf8
+    db, err := sql.Open(&quot;mysql&quot;, &quot;root:@tcp(127.0.0.1:3306)/test&quot;)
+    if err != nil {
+        panic(err.Error())
+    }
+    defer db.Close()
+    
+    //// 2、以下为写入数据
+    //// 准备模拟写入语句，绑定对象smt
+    //smt, err := db.Prepare(&quot;INSERT INTO user(`name`, `age`) VALUES (?, ?)&quot;)
+    //if err != nil {
+    //  panic(err.Error())
+    //}
+    //defer smt.Close()
+    //
+    //// 测试数据用字典表示
+    //students := map[string]int{&quot;zhangsan&quot; : 18, &quot;lisi&quot; : 20, &quot;wangwu&quot; : 29, &quot;maliu&quot; : 45}
+    //
+    //for name, age := range students {
+    //  // row,_ 返回 {0xc420058150 0xc420010a30}
+    //  _, err := smt.Exec(name, age)
+    //  // 获取最后插入的ID和该操作影响的行数
+    //  //_, _ = t.LastInsertId()
+    //  //_, _ = t.RowsAffected()
+    //
+    //  if err != nil {
+    //      panic(err.Error())
+    //  }
+    //}
+    
+    // 3、以下为查询数据
+    
+    var (
+        Id int16
+        Name string
+        Age int
+    )
+    
+    //// 查询一条记录
+    //smt, err := db.Prepare(&quot;SELECT * FROM user WHERE id = ?&quot;)
+    //if err != nil {
+    //  panic(err.Error())
+    //}
+    //defer smt.Close()
+    //
+    //err = smt.QueryRow(13).Scan(&amp;Id, &amp;Name, &amp;Age)
+    //if err != nil {
+    //  panic(err.Error())
+    //}
+    //fmt.Printf(&quot;Id:%d, Name:%s, Age:%d\n&quot;, Id, Name, Age)
+    
+    // 查询多条记录，直接使用数据库连接
+    rows, err := db.Query(&quot;SELECT * FROM user ORDER BY age DESC&quot;)
+    if err != nil {
+        panic(err.Error())
+    }
+    for rows.Next() {
+        // 将查询结果绑定到变量
+        err = rows.Scan(&amp;Id, &amp;Name, &amp;Age)
+        if err != nil {
+            panic(err.Error())
+        }
+        fmt.Printf(&quot;Id:%d, Name:%s, Age:%d\n&quot;, Id, Name, Age)
+    }
+
+    fmt.Print(&quot;Done\n&quot;)
+}</code></pre></div>
+	</article>
+</main>
