@@ -65,7 +65,7 @@ func QuoteList() []*Quote {
 func QuoteInfo(id int64) (Quote, error) {
 	var q Quote
 	o := orm.NewOrm()
-	err := o.QueryTable(q).RelatedSel().Filter("-Id", id).One(&q)
+	err := o.QueryTable(q).RelatedSel().Filter("Id", id).One(&q)
 	return q, err
 }
 
@@ -73,7 +73,7 @@ func QuoteInfo(id int64) (Quote, error) {
 func QuoteOne() Quote {
 	var q Quote
 	o := orm.NewOrm()
-	if err := o.QueryTable(q).RelatedSel().Filter("Status", 1).OrderBy("Id").One(&q); err != nil {
+	if err := o.QueryTable(q).RelatedSel().Filter("Status", 1).OrderBy("-Id").One(&q); err != nil {
 		// 需要添加引用
 	}
 	return q
