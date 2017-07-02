@@ -62,7 +62,7 @@
                             <div class="recent-single-post">
                                 <a href="/view/{{.Id}}" class="post-title">{{.Title}}</a>
                                 <div class="date">
-                                    2017年02月20日
+                                    {{.Ctime | todate}}
                                 </div>
                             </div>
                             {{end}}
