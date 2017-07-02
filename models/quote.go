@@ -35,18 +35,16 @@ func QuoteStatusDesc(id int) string {
 
 // QuoteSave 添加引用
 func QuoteSave(q *Quote) (int64, error) {
-	o := orm.NewOrm()
 	q.Status = 1
 	q.Ctime = time.Now().Unix()
 	q.Utime = time.Now().Unix()
-	return o.Insert(q)
+	return orm.NewOrm().Insert(q)
 }
 
 // QuoteUpdate 更新引用
 func QuoteUpdate(q *Quote) (int64, error) {
-	o := orm.NewOrm()
 	q.Utime = time.Now().Unix()
-	if _, err := o.Update(q); err != nil {
+	if _, err := orm.NewOrm().Update(q); err != nil {
 		return q.Id, err
 	}
 	return q.Id, nil
@@ -56,24 +54,21 @@ func QuoteUpdate(q *Quote) (int64, error) {
 func QuoteList() []*Quote {
 	var quote Quote
 	var quotes []*Quote
-	o := orm.NewOrm()
-	o.QueryTable(quote).RelatedSel().Filter("Status", 1).All(&quotes)
+	orm.NewOrm().QueryTable(quote).RelatedSel().Filter("Status", 1).All(&quotes)
 	return quotes
 }
 
 // QuoteInfo 引用详情
 func QuoteInfo(id int64) (Quote, error) {
 	var q Quote
-	o := orm.NewOrm()
-	err := o.QueryTable(q).RelatedSel().Filter("Id", id).One(&q)
+	err := orm.NewOrm().QueryTable(q).RelatedSel().Filter("Id", id).One(&q)
 	return q, err
 }
 
 // QuoteOne 获取最新的一条引用
 func QuoteOne() Quote {
 	var q Quote
-	o := orm.NewOrm()
-	if err := o.QueryTable(q).RelatedSel().Filter("Status", 1).OrderBy("-Id").One(&q); err != nil {
+	if err := orm.NewOrm().QueryTable(q).RelatedSel().Filter("Status", 1).OrderBy("-Id").One(&q); err != nil {
 		// 需要添加引用
 	}
 	return q

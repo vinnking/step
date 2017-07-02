@@ -53,18 +53,16 @@ func LinkTypeDesc(id int) string {
 
 // LinkSave 添加友情链接
 func LinkSave(l *Link) (int64, error) {
-	o := orm.NewOrm()
 	l.Status = 1
 	l.Ctime = time.Now().Unix()
 	l.Utime = time.Now().Unix()
-	return o.Insert(l)
+	return orm.NewOrm().Insert(l)
 }
 
 // LinkUpdate 更新友情链接
 func LinkUpdate(l *Link) (int64, error) {
-	o := orm.NewOrm()
 	l.Utime = time.Now().Unix()
-	if _, err := o.Update(l); err != nil {
+	if _, err := orm.NewOrm().Update(l); err != nil {
 		return l.Id, err
 	}
 	return l.Id, nil
@@ -74,16 +72,14 @@ func LinkUpdate(l *Link) (int64, error) {
 func LinkList() []*Link {
 	var link Link
 	var links []*Link
-	o := orm.NewOrm()
-	o.QueryTable(link).RelatedSel().Filter("Status", 1).All(&links)
+	orm.NewOrm().QueryTable(link).RelatedSel().Filter("Status", 1).All(&links)
 	return links
 }
 
 // LinkInfo 友情链接详情
 func LinkInfo(id int64) (Link, error) {
 	var l Link
-	o := orm.NewOrm()
-	err := o.QueryTable(l).RelatedSel().Filter("Id", id).One(&l)
+	err := orm.NewOrm().QueryTable(l).RelatedSel().Filter("Id", id).One(&l)
 	return l, err
 }
 

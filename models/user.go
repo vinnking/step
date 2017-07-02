@@ -102,25 +102,22 @@ func UserUpdate(u *User) (int64, error) {
 func UserList() []*User {
 	var user User
 	var users []*User
-	o := orm.NewOrm()
-	o.QueryTable(user).RelatedSel().Filter("Status", 1).All(&users)
+	orm.NewOrm().QueryTable(user).RelatedSel().Filter("Status", 1).All(&users)
 	return users
 }
 
 // Info 用户信息
 func UserInfo(id int64) (User, error) {
 	var u User
-	o := orm.NewOrm()
-	err := o.QueryTable(u).RelatedSel().Filter("Id", id).One(&u)
+	err := orm.NewOrm().QueryTable(u).RelatedSel().Filter("Id", id).One(&u)
 	return u, err
 }
 
 // UserCheck 检查用户是否存在
 func UserCheck(email string, password string) (User, error) {
 	var u User
-	o := orm.NewOrm()
 	salt := Salt()
-	err := o.QueryTable(u).RelatedSel().Filter("Email", email).Filter("Status", 1).Filter("Password", Password(password, salt)).One(&u)
+	err := orm.NewOrm().QueryTable(u).RelatedSel().Filter("Email", email).Filter("Status", 1).Filter("Password", Password(password, salt)).One(&u)
 	return u, err
 }
 

@@ -50,9 +50,8 @@ func PostSave(p *Post) (int64, error) {
 
 // PostUpdate 文章更新
 func PostUpdate(p *Post) (int64, error) {
-	o := orm.NewOrm()
 	p.Utime = time.Now().Unix()
-	if _, err := o.Update(p); err != nil {
+	if _, err := orm.NewOrm().Update(p); err != nil {
 		return p.Id, err
 	}
 	return p.Id, nil
@@ -62,8 +61,7 @@ func PostUpdate(p *Post) (int64, error) {
 func PostList() []*Post {
 	var post Post
 	var posts []*Post
-	o := orm.NewOrm()
-	o.QueryTable(post).RelatedSel().Filter("Status", 1).OrderBy("-Id").All(&posts)
+	orm.NewOrm().QueryTable(post).RelatedSel().Filter("Status", 1).OrderBy("-Id").All(&posts)
 	return posts
 }
 
@@ -71,16 +69,29 @@ func PostList() []*Post {
 func PostListFilter(cateId int, limit int) []*Post {
 	var post Post
 	var posts []*Post
-	o := orm.NewOrm()
-	o.QueryTable(post).RelatedSel().Filter("Status", 1).Filter("Type", cateId).OrderBy("-Id").Limit(limit).All(&posts)
+	orm.NewOrm().QueryTable(post).RelatedSel().Filter("Status", 1).Filter("Type", cateId).OrderBy("-Id").Limit(limit).All(&posts)
+	return posts
+}
+
+// PostListLabel 根据标签搜索文章
+func PostListLabel(labelId int, limit int) []*Post {
+	var postIds []int64
+	// 该标签下的所有文章id
+	for _, label := range PostLabels(int64(labelId)) {
+		postIds = append(postIds, label.PostId)
+	}
+	var post Post
+	var posts []*Post
+	if len(postIds) > 0 {
+		orm.NewOrm().QueryTable(post).RelatedSel().Filter("Id__in", postIds).Filter("Status", 1).OrderBy("-Id").Limit(limit).All(&posts)
+	}
 	return posts
 }
 
 // PostInfo 文章详情
 func PostInfo(id int64) (Post, error) {
 	var post Post
-	o := orm.NewOrm()
-	err := o.QueryTable(post).RelatedSel().Filter("Id", id).One(&post)
+	err := orm.NewOrm().QueryTable(post).RelatedSel().Filter("Id", id).One(&post)
 	return post, err
 }
 
@@ -112,8 +123,7 @@ func PostLabelDesc(userId int64, postId int64) string {
 func PostRecent() []*Post {
 	var post Post
 	var posts []*Post
-	o := orm.NewOrm()
-	o.QueryTable(post).RelatedSel().Filter("Status", 1).OrderBy("-Id").Limit(3).All(&posts)
+	orm.NewOrm().QueryTable(post).RelatedSel().Filter("Status", 1).OrderBy("-Id").Limit(3).All(&posts)
 	return posts
 }
 

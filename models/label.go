@@ -30,15 +30,13 @@ func LabelStatusDesc(id int) string {
 
 // LabelSave 添加标签
 func LabelSave(l *Label) (int64, error) {
-	o := orm.NewOrm()
 	l.Status = 1
-	return o.Insert(l)
+	return orm.NewOrm().Insert(l)
 }
 
 // LabelUpdate 更新标签
 func LabelUpdate(l *Label) (int64, error) {
-	o := orm.NewOrm()
-	if _, err := o.Update(l); err != nil {
+	if _, err := orm.NewOrm().Update(l); err != nil {
 		return l.Id, err
 	}
 	return l.Id, nil
@@ -48,16 +46,14 @@ func LabelUpdate(l *Label) (int64, error) {
 func LabelList() []*Label {
 	var label Label
 	var labels []*Label
-	o := orm.NewOrm()
-	o.QueryTable(label).RelatedSel().Filter("Status", 1).All(&labels)
+	orm.NewOrm().QueryTable(label).RelatedSel().Filter("Status", 1).All(&labels)
 	return labels
 }
 
 // LabelInfo 标签详情
 func LabelInfo(id int64) (Label, error) {
 	var l Label
-	o := orm.NewOrm()
-	err := o.QueryTable(l).RelatedSel().Filter("Id", id).One(&l)
+	err := orm.NewOrm().QueryTable(l).RelatedSel().Filter("Id", id).One(&l)
 	return l, err
 }
 

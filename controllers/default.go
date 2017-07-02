@@ -63,3 +63,27 @@ func (m *MainController) View() {
 	m.Layout = "layout.html"
 	m.TplName = post.Url
 }
+
+// Label 标签相关文章
+func (m *MainController) Label() {
+	menuList := models.MenuList()
+
+	var labelId int
+	var err error
+	lId := m.Ctx.Input.Param(":id")
+	if strings.TrimSpace(lId) != "" {
+		if labelId, err = strconv.Atoi(lId); err != nil {
+			labelId = 1
+		}
+	}
+	
+	m.Data["quote"] = models.QuoteOne()
+	m.Data["menus"] = menuList
+	m.Data["cateId"] = 0
+	m.Data["posts"] = models.PostListLabel(labelId, 10)
+	m.Data["recent"] = models.PostRecent()
+	m.Data["labels"] = models.LabelList()
+	m.Data["links"] = models.LinkList()
+	m.Layout = "layout.html"
+	m.TplName = "index.html"
+}

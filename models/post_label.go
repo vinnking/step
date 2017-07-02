@@ -14,22 +14,27 @@ type PostLabel struct {
 func PostLabelList(userId int64, postId int64) []*PostLabel {
 	var postLabel PostLabel
 	var postLabels []*PostLabel
-	o := orm.NewOrm()
-	o.QueryTable(postLabel).RelatedSel().Filter("UserId", userId).Filter("PostId", postId).All(&postLabels)
+	orm.NewOrm().QueryTable(postLabel).RelatedSel().Filter("UserId", userId).Filter("PostId", postId).All(&postLabels)
+	return postLabels
+}
+
+// PostLabels 根据标签获取文章
+func PostLabels(labelId int64) []*PostLabel {
+	var postLabel PostLabel
+	var postLabels []*PostLabel
+	orm.NewOrm().QueryTable(postLabel).RelatedSel().Filter("LabelId", labelId).All(&postLabels)
 	return postLabels
 }
 
 // PostLabelSave 文章标签关联保存
 func PostLabelSave(pl *PostLabel) (int64, error) {
-	o := orm.NewOrm()
-	return o.Insert(pl)
+	return orm.NewOrm().Insert(pl)
 }
 
 // PostLabelDelete 文章标签关联删除
 func PostLabelDelete(userId int64, postId int64) (int64, error) {
 	var pl PostLabel
-	o := orm.NewOrm()
-	return o.QueryTable(pl).RelatedSel().Filter("UserId", userId).Filter("PostId", postId).Delete()
+	return orm.NewOrm().QueryTable(pl).RelatedSel().Filter("UserId", userId).Filter("PostId", postId).Delete()
 }
 
 /*
