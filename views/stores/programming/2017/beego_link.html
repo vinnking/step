@@ -1,0 +1,483 @@
+<main class="col-md-12 main-content">
+	<article class="post">
+		<h2 class="text-center">用beego写一个友情链接</h2>
+		
+		<h4 class="text-center">zhgxun<small> 2017年07月02日</small></h4>
+		
+		<hr />
+		
+		<p class="bg-primary" style="padding: 15px 15px 15px 15px;">说明：因beego和go模板template解析关系，涉及到的默认模板标签（双大括号）均被替换为 _{_ _}_标签。</p>
+		
+		<p>beego框架和bee工具的安装非常简单，唯一需要注意的是Mac平台go1.8版本无法运行bee工具，说是官方包造成的bug，需要使用更高版本，比如我的Mac本地版本是:</p>
+		
+		<div><pre class="line-numbers"><code class="language-bash">zhgxun-pro:~ zhgxun$ go version
+go version go1.8.3 darwin/amd64</code></pre></div>
+		
+		<p>现在来看如何用beego框架编写一个友情链接。</p>
+		
+		<h4 id="toc_1">1、创建表</h4>
+		
+		<div><pre class="line-numbers"><code class="language-mysql">CREATE TABLE `link` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `type` tinyint(1) NOT NULL DEFAULT 1 COMMENT '类型1官网2手册3其它',
+  `title` varchar(120) NOT NULL COMMENT '标题',
+  `url` varchar(255) NOT NULL COMMENT '地址',
+  `content` varchar(255) NOT NULL COMMENT '描述',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态1可用2不可用',
+  `ctime` int(11) DEFAULT '0' COMMENT '创建时间',
+  `utime` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `type`(`type`),
+  KEY `title`(`title`),
+  KEY `status`(`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='友情链接';</code></pre></div>
+		
+		<h4 id="toc_2">2、编写模型</h4>
+		
+		<div><pre class="line-numbers"><code class="language-go">// 友情链接
+package models
+
+import (
+    "time"
+
+    "github.com/astaxie/beego/orm"
+)
+
+type Link struct {
+    Id      int64
+    Type    int
+    Title   string
+    Url     string
+    Content string
+    Status  int
+    Ctime   int64
+    Utime   int64
+}
+
+// LinkStatus 友情链接状态
+func LinkStatus() map[int]string {
+    return map[int]string{
+        1: "可用",
+        2: "不可用",
+    }
+}
+
+// LinkStatusDesc 友情链接状态描述
+func LinkStatusDesc(id int) string {
+    if desc, ok := LinkStatus()[id]; ok {
+        return desc
+    }
+    return "未知"
+}
+
+// LinkTypeList 类型
+func LinkTypeList() map[int]string {
+    return map[int]string{
+        1: "官网",
+        2: "手册",
+        3: "其它",
+    }
+}
+
+// LinkTypeDesc 类型描述
+func LinkTypeDesc(id int) string {
+    if desc, ok := LinkTypeList()[id]; ok {
+        return desc
+    }
+    return "未知"
+}
+
+// LinkSave 添加友情链接
+func LinkSave(l *Link) (int64, error) {
+    l.Status = 1
+    l.Ctime = time.Now().Unix()
+    l.Utime = time.Now().Unix()
+    return orm.NewOrm().Insert(l)
+}
+
+// LinkUpdate 更新友情链接
+func LinkUpdate(l *Link) (int64, error) {
+    l.Utime = time.Now().Unix()
+    if _, err := orm.NewOrm().Update(l); err != nil {
+        return l.Id, err
+    }
+    return l.Id, nil
+}
+
+// LinkList 友情链接列表
+func LinkList() []*Link {
+    var link Link
+    var links []*Link
+    orm.NewOrm().QueryTable(link).RelatedSel().Filter("Status", 1).All(&amp;links)
+    return links
+}
+
+// LinkInfo 友情链接详情
+func LinkInfo(id int64) (Link, error) {
+    var l Link
+    err := orm.NewOrm().QueryTable(l).RelatedSel().Filter("Id", id).One(&amp;l)
+    return l, err
+}</code></pre></div>
+		
+		<h4 id="toc_3">3、注册模型</h4>
+		
+		<div><pre class="line-numbers"><code class="language-go">package main
+
+import (
+    _ "github.com/go-sql-driver/mysql"
+
+    "github.com/astaxie/beego"
+    "github.com/astaxie/beego/orm"
+
+    "step/models"
+    _ "step/routers"
+    _ "step/templates"
+)
+
+func init() {
+    orm.RegisterDataBase("default", "mysql", "root:@/step")
+    orm.RegisterModel(
+        new(models.Link),
+    )
+}
+
+func main() {
+    beego.Run()
+}</code></pre></div>
+		
+		<h4 id="toc_4">4、注册路由</h4>
+		
+		<div><pre class="line-numbers"><code class="language-go">package routers
+
+import (
+    "github.com/astaxie/beego"
+
+    "step/controllers"
+)
+
+func init() {
+    // 友情链接
+    beego.Router("/link", &amp;controllers.LinkController{}, "GET:Index")
+    beego.Router("/link/create", &amp;controllers.LinkController{}, "GET,POST:Create")
+    beego.Router("/link/:id([0-9]+)", &amp;controllers.LinkController{}, "GET,POST:View")
+    beego.Router("/link/update/:id([0-9]+)", &amp;controllers.LinkController{}, "GET,POST:Update")
+    beego.Router("/link/delete/:id([0-9]+)", &amp;controllers.LinkController{}, "GET:Delete")
+}</code></pre></div>
+		
+		<h4 id="toc_5">5、控制器</h4>
+		
+		<div><pre class="line-numbers"><code class="language-go">// 友情链接
+package controllers
+
+import (
+    "fmt"
+    "strconv"
+    "strings"
+
+    "github.com/astaxie/beego"
+
+    "step/models"
+)
+
+type LinkController struct {
+    beego.Controller
+}
+
+// 检查用户是否登陆
+func (l *LinkController) Prepare() {
+    _, user := models.IsLogin(l.Ctx)
+    l.Data["nickname"] = user.Nickname
+}
+
+// Index 友情链接列表
+func (l *LinkController) Index() {
+    l.Data["links"] = models.LinkList()
+    l.Data["types"] = models.LinkTypeList()
+    l.Data["status"] = models.LinkStatus()
+    l.Layout = "base.html"
+    l.TplName = "link/index.html"
+}
+
+// Create 添加友情链接
+func (l *LinkController) Create() {
+    if l.Ctx.Request.Method == "POST" {
+        typeId, err := strconv.Atoi(strings.TrimSpace(l.Input().Get("type")))
+        if err != nil {
+            l.Redirect("/link/create", 302)
+        }
+        title := l.Input().Get("title")
+        url := l.Input().Get("url")
+        content := l.Input().Get("content")
+        if typeId &lt;= 0 {
+            l.Redirect("/link/create", 302)
+        }
+        if strings.TrimSpace(title) == "" {
+            l.Redirect("/link/create", 302)
+        }
+        if strings.TrimSpace(url) == "" {
+            l.Redirect("/link/create", 302)
+        }
+        if strings.TrimSpace(content) == "" {
+            l.Redirect("/link/create", 302)
+        }
+        var id int64
+        if id, err = models.LinkSave(&amp;models.Link{
+            Type:    typeId,
+            Title:   title,
+            Url:     url,
+            Content: content,
+        }); err != nil {
+            l.Redirect("/link/create", 302)
+        }
+        l.Redirect("/link/"+strconv.FormatInt(id, 10), 302)
+    }
+
+    l.Data["isNewRecord"] = true
+    l.Data["link"] = models.Link{}
+    l.Data["types"] = models.LinkTypeList()
+    l.Layout = "base.html"
+    l.TplName = "link/create.html"
+}
+
+// View 友情链接详情
+func (l *LinkController) View() {
+    id, err := strconv.Atoi(l.Ctx.Input.Param(":id"))
+    if err != nil || id &lt;= 0 {
+        l.Redirect("/link", 302)
+    }
+    link, err := models.LinkInfo(int64(id))
+    if err != nil {
+        l.Redirect("/link ", 302)
+    }
+    l.Data["link"] = link
+    l.Data["type"] = models.LinkTypeDesc(link.Type)
+    l.Data["status"] = models.LinkStatusDesc(link.Status)
+    l.Layout = "base.html"
+    l.TplName = "link/view.html"
+}
+
+// Update 编辑友情链接
+func (l *LinkController) Update() {
+    id, err := strconv.Atoi(l.Ctx.Input.Param(":id"))
+    if err != nil || id &lt;= 0 {
+        l.Redirect("/link", 302)
+    }
+    link, err := models.LinkInfo(int64(id))
+    if err != nil {
+        l.Redirect("/link ", 302)
+    }
+
+    if l.Ctx.Request.Method == "POST" {
+        typeId, err := strconv.Atoi(strings.TrimSpace(l.Input().Get("type")))
+        if err != nil {
+            l.Redirect("/link/update/"+strconv.FormatInt(int64(id), 10), 302)
+        }
+        link.Type = typeId
+        link.Title = strings.TrimSpace(l.Input().Get("title"))
+        link.Url = strings.TrimSpace(l.Input().Get("url"))
+        link.Content = strings.TrimSpace(l.Input().Get("content"))
+        var newId int64
+        if newId, err = models.LinkUpdate(&amp;link); err != nil {
+            l.Redirect("/link/update/"+strconv.FormatInt(newId, 10), 302)
+        }
+        l.Redirect("/link/"+strconv.FormatInt(newId, 10), 302)
+    }
+
+    l.Data["isNewRecord"] = false
+    l.Data["link"] = link
+    l.Data["types"] = models.LinkTypeList()
+    l.Layout = "base.html"
+    l.TplName = "link/update.html"
+}
+
+// Delete 删除友情链接
+func (l *LinkController) Delete() {
+    id, err := strconv.Atoi(l.Ctx.Input.Param(":id"))
+    if err != nil || id &lt;= 0 {
+        l.Redirect("/link", 302)
+    }
+    link, err := models.LinkInfo(int64(id))
+    if err != nil {
+        l.Redirect("/link", 302)
+    }
+    link.Status = 2
+    if _, err := models.LinkUpdate(&amp;link); err != nil {
+        fmt.Println(err)
+    }
+    l.Redirect("/link", 302)
+}</code></pre></div>
+		
+		<h4 id="toc_6">6、模板</h4>
+		
+		<h5 id="toc_7">6.1 列表 index.html</h5>
+		
+		<div><pre class="line-numbers"><code class="language-markup">&lt;ol class="breadcrumb"&gt;
+    &lt;li&gt;&lt;a href="#"&gt;首页&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;内容管理&lt;/a&gt;&lt;/li&gt;
+    &lt;li class="active"&gt;友情链接&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;
+    &lt;a class="btn btn-primary" href="/link/create"&gt;添加&lt;/a&gt;
+&lt;/p&gt;
+
+&lt;p class="text-info"&gt;共搜索到 &lt;a class="text-success"&gt;_{_.links | len_}_&lt;/a&gt; 条符合条件的记录。&lt;/p&gt;
+&lt;table class="table table-bordered table-striped"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th width="10%"&gt;ID&lt;/th&gt;
+            &lt;th width="10%"&gt;类型&lt;/th&gt;
+            &lt;th width="20%"&gt;名称&lt;/th&gt;
+            &lt;th width="35%"&gt;描述&lt;/th&gt;
+            &lt;th width="10%"&gt;状态&lt;/th&gt;
+            &lt;th width="15%"&gt;操作&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        _{_range .links_}_
+        &lt;tr&gt;
+            &lt;td&gt;_{_.Id_}_&lt;/td&gt;
+            &lt;td&gt;_{_index $.types .Type_}_&lt;/td&gt;
+            &lt;td&gt;_{_.Title_}_&lt;/td&gt;
+            &lt;td&gt;_{_.Content_}_&lt;/td&gt;
+            &lt;td&gt;_{_index $.status .Status_}_&lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href="/link/_{_.Id_}_"&gt;查看&lt;/a&gt;&amp;nbsp;&amp;nbsp;|
+                &lt;a href="/link/update/_{_.Id_}_"&gt;编辑&lt;/a&gt;&amp;nbsp;&amp;nbsp;|
+                &lt;a href="javascript:if(confirm('确定删除吗?')) location.href='/link/delete/_{_.Id_}_'"&gt;删除&lt;/a&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        _{_end_}_
+    &lt;/tbody&gt;
+&lt;/table&gt;</code></pre></div>
+		
+		<h5 id="toc_8">6.2 添加 create.html</h5>
+		
+		<div><pre class="line-numbers"><code class="language-markup">&lt;ol class="breadcrumb"&gt;
+    &lt;li&gt;&lt;a href="#"&gt;首页&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;内容管理&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/link"&gt;友情链接&lt;/a&gt;&lt;/li&gt;
+    &lt;li class="active"&gt;添加&lt;/li&gt;
+&lt;/ol&gt;
+
+_{_template "link/from.html" ._}_</code></pre></div>
+		
+		<h5 id="toc_9">6.3 表单 from.html</h5>
+		
+		<div><pre class="line-numbers"><code class="language-markup">&lt;form method="post" action="/link/_{_if .isNewRecord_}_create_{_else_}_update/_{_.link.Id_}__{_end_}_"&gt;
+    &lt;div class="form-group"&gt;
+        &lt;label for="type"&gt;类型&lt;/label&gt;
+        &lt;select class="form-control" id="type" name="type"&gt;
+            _{_range $index, $type := .types_}_
+            &lt;option id="type__{_$index_}_"  value="_{_$index_}_"&gt;_{_$type_}_&lt;/option&gt;
+            _{_end_}_
+        &lt;/select&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+        &lt;label for="title"&gt;标题&lt;/label&gt;
+        &lt;input type="text" class="form-control" id="title" name="title" value="_{_.link.Title_}_" placeholder="请输入标题"&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+        &lt;label for="url"&gt;地址&lt;/label&gt;
+        &lt;input type="text" class="form-control" id="url" name="url" value="_{_.link.Url_}_" placeholder="请输入地址"&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+        &lt;label for="content"&gt;描述&lt;/label&gt;
+        &lt;textarea class="form-control" id="content" name="content" cols="15" rows="4"&gt;_{_.link.Content_}_&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+        &lt;button type="submit" class="btn btn-primary"&gt;_{_if .isNewRecord_}_添加_{_else_}_编辑_{_end_}_&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/form&gt;
+&lt;script type="text/javascript"&gt;
+    $(function () {
+        $("#type__{_.link.Type_}_").prop("selected", "selected");
+    });
+&lt;/script&gt;</code></pre></div>
+		
+		<h5 id="toc_10">6.4 编辑 update.html</h5>
+		
+		<div><pre class="line-numbers"><code class="language-markup">&lt;ol class="breadcrumb"&gt;
+    &lt;li&gt;&lt;a href="#"&gt;首页&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;内容管理&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/link"&gt;友情链接&lt;/a&gt;&lt;/li&gt;
+    &lt;li class="active"&gt;编辑&lt;/li&gt;
+&lt;/ol&gt;
+
+_{_template "link/from.html" ._}_</code></pre></div>
+		
+		<h5 id="toc_11">6.5 详情 view.html</h5>
+		
+		<div><pre class="line-numbers"><code class="language-markup">&lt;ol class="breadcrumb"&gt;
+    &lt;li&gt;&lt;a href="#"&gt;首页&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;内容管理&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/link"&gt;友情链接&lt;/a&gt;&lt;/li&gt;
+    &lt;li class="active"&gt;详情&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;
+    &lt;a class="btn btn-primary" href="/link/create"&gt;添加&lt;/a&gt;
+    &lt;a class="btn btn-info" href="/link/update/_{_.link.Id_}_"&gt;修改&lt;/a&gt;
+    &lt;a class="btn btn-danger" href="/link/delete/_{_.link.Id_}_"&gt;删除&lt;/a&gt;
+&lt;/p&gt;
+
+&lt;table class="table table-bordered table-responsive"&gt;
+    &lt;thead&gt;
+    &lt;tr&gt;
+        &lt;th width="10%"&gt;属性&lt;/th&gt;
+        &lt;th width="90%"&gt;名称&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Id&lt;/td&gt;
+        &lt;td&gt;_{_.link.Id_}_&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;类型&lt;/td&gt;
+        &lt;td&gt;_{_.type_}_&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;名字&lt;/td&gt;
+        &lt;td&gt;_{_.link.Title_}_&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;说明&lt;/td&gt;
+        &lt;td&gt;_{_.link.Content_}_&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;状态&lt;/td&gt;
+        &lt;td&gt;_{_.status_}_&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;</code></pre></div>
+		
+		<h4 id="toc_12">7、效果展示</h4>
+		
+		<p>列表</p>
+		
+		<p><img src="https://raw.githubusercontent.com/zhgxun/images/master/programming/link_list.jpeg" alt="列表"></p>
+		
+		<p>添加</p>
+		
+		<p><img src="https://raw.githubusercontent.com/zhgxun/images/master/programming/link_add.jpeg" alt="添加"></p>
+		
+		<p>修改</p>
+		
+		<p><img src="https://raw.githubusercontent.com/zhgxun/images/master/programming/link_update.jpeg" alt="修改"></p>
+		
+		<p>详情</p>
+		
+		<p><img src="https://raw.githubusercontent.com/zhgxun/images/master/programming/link_view.jpeg" alt="详情"></p>
+		
+		<h4 id="toc_13">8、说明</h4>
+		
+		<p>《Go语言程序设计》一书7.7节中提到:</p>
+		
+		<blockquote>
+			<p>"Go语言目前没有一个权威的web框架，就像Ruby语言有Rails和python有Django。这并不是说这样的框架不存在，而是Go语言标准库中的构建模块就已经非常灵活以至于这些框架都是不必要的。此外，尽管在一个项目早期使用框架是非常方便的，但是它们带来额外的复杂度会使长期的维护更加困难。"</p>
+		</blockquote>
+		
+		<p>和使用PHP成熟的WEB开发框架比如YII2比较起来，确实显得无比笨拙。当然还可以做更多的封装，在这里就不做这些处理，仅仅是体验一下用go来编写一个简单的友情链接，你就会知道对于一般功能的实现，有一个完善的框架是多么的便捷和美好。没有尝试过用bee的自动生成工具生成的代码有多棒，但至少应该比上面的代码看起来要聪明一些才好。</p>
+	</article>
+</main>
