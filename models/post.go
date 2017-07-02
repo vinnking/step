@@ -67,6 +67,15 @@ func PostList() []*Post {
 	return posts
 }
 
+// PostListFilter 根据分类和条数获取文章列表
+func PostListFilter(cateId int, limit int) []*Post {
+	var post Post
+	var posts []*Post
+	o := orm.NewOrm()
+	o.QueryTable(post).RelatedSel().Filter("Status", 1).Filter("Type", cateId).OrderBy("-Id").Limit(limit).All(&posts)
+	return posts
+}
+
 // PostInfo 文章详情
 func PostInfo(id int64) (Post, error) {
 	var post Post

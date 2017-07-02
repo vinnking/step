@@ -8,6 +8,7 @@ import (
 
 	"step/models"
 	_ "step/routers"
+	_ "step/templates"
 )
 
 func init() {
@@ -23,5 +24,6 @@ func init() {
 }
 
 func main() {
+	orm.Debug = true
 	beego.Run()
 }

@@ -1,11 +1,11 @@
-<main class="col-md-8 main-content">
+<main class="col-md-9 main-content">
     {{range .posts}}
     <article class="post">
         <div class="post-head">
             <h1 class="post-title"><a href="/view/{{.Id}}">{{.Title}}</a></h1>
             <div class="post-meta">
-                <span class="author">作者：<a href="https://www.bootcss.com/" target="_blank">王赛</a></span> •
-                <time class="post-date" datetime="2017年02月20日" title="2017年02月20日">2017年02月20日</time>
+                <span class="author">作者: <a href="#" target="_blank">{{.UserId | username}}</a></span> •
+                <time class="post-date" datetime="{{.Ctime | todate}}" title="{{.Ctime | todate}}">{{.Ctime | todate}}</time>
             </div>
         </div>
         <div class="featured-media">
@@ -21,15 +21,18 @@
         </div>
         <footer class="post-footer clearfix"></footer>
     </article>
+    {{else}}
+    <p class="text-info text-center">暂时还没有内容...</p>
     {{end}}
 
-    <nav class="pagination" role="navigation">
-        <span class="page-number">第 1 页 / 共 7 页</span>
-        <a class="older-posts" href="/page/2/"><i class="fa fa-angle-right"></i></a>
-    </nav>
+    <!-- 不需要分页, 取最新的10篇文章足够 -->
+    <!--<nav class="pagination" role="navigation">-->
+        <!--<span class="page-number">第 1 页 / 共 7 页</span>-->
+        <!--<a class="older-posts" href="/page/2/"><i class="fa fa-angle-right"></i></a>-->
+    <!--</nav>-->
 </main>
 
-<aside class="col-md-4 sidebar">
+<aside class="col-md-3 sidebar">
     <div class="widget">
         <h4 class="title">引用说明</h4>
         <div class="content community">
