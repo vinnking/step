@@ -20,7 +20,7 @@ func UserName(id int64) string {
 
 // ToDate 将int64格式的时间戳转化为日期字符串
 func ToDate(t int64) string {
-	return time.Unix(t, 0).Format("2006-01-02 15:04:05")
+	return time.Unix(t, 0).Format("2006年01月02日")
 }
 
 func init() {
