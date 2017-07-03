@@ -11,6 +11,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/orm"
+	"errors"
 )
 
 type User struct {
@@ -116,9 +117,14 @@ func UserInfo(id int64) (User, error) {
 // UserCheck 检查用户是否存在
 func UserCheck(email string, password string) (User, error) {
 	var u User
-	salt := Salt()
-	err := orm.NewOrm().QueryTable(u).RelatedSel().Filter("Email", email).Filter("Status", 1).Filter("Password", Password(password, salt)).One(&u)
-	return u, err
+	if err := orm.NewOrm().QueryTable(u).RelatedSel().Filter("Email", email).Filter("Status", 1).One(&u); err != nil {
+		return u, err
+	}
+	// 核对密码是否正确
+	if u.Password != Password(password, Salt()) {
+		return u, errors.New("密码错误")
+	}
+	return u, nil
 }
 
 // IsLogin 用户是否登陆, 无登陆直接跳转至登录页
