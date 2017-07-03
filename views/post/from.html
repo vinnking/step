@@ -47,7 +47,7 @@
         {{else}}
 		    $("#type_{{.post.Type}}").prop("selected", "selected");
 		    {{range .hasLabels}}
-		        $("#label_{{.Id}}").prop("checked", true);
+		        $("#label_{{.LabelId}}").prop("checked", true);
 		    {{end}}
         {{end}}
 	});
