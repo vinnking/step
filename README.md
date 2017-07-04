@@ -1,9 +1,9 @@
 # step
 使用Beego框架构建的Go语言简单博客，内容包括文章、友情链接、标签等。
 
-模板使用为 WEB 艺术家创造的PHP框架[Laravel官方网站](http://www.golaravel.com)首页样式。
+模板使用为WEB艺术家创造的PHP框架[Laravel官方网站](http://www.golaravel.com)首页样式。
 
-文章原文均在文件夹views/stores目录中，博客使用tree命令显示如下：
+文章原文均在文件夹views/stores目录中，博客使用tree命令显示大致目录和文件如下：
 ```bash
 [zhgxun-pro:step zhgxun$ tree
  .
@@ -44,6 +44,8 @@
  ├── step
  ├── templates
  │   └── func.go
+ ├── util
+ │   └── salt.go
  └── views
      ├── base.html
      ├── index.html
@@ -92,7 +94,7 @@
          ├── update.html
          └── view.html
 
- 22 directories, 62 files
+ 23 directories, 63 files
  zhgxun-pro:step zhgxun$
 ```
 

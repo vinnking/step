@@ -1,3 +1,4 @@
+// 生成一个盐
 package util
 
 import (
