@@ -4,6 +4,7 @@ package models
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -11,7 +12,8 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/orm"
-	"errors"
+
+	"step/util"
 )
 
 type User struct {
@@ -60,9 +62,12 @@ func UserStatusDesc(id int) string {
 }
 
 // Salt 生成一个盐, 用于校验密码复杂度
-// 盐的长度不能超过120个字符
 func Salt() string {
-	return "cr42ew"
+	s, err := util.Salt(6, 2, 2, 2)
+	if err != nil {
+		return "dMr$2H9"
+	}
+	return s
 }
 
 // Password 生成密码
@@ -121,7 +126,7 @@ func UserCheck(email string, password string) (User, error) {
 		return u, err
 	}
 	// 核对密码是否正确
-	if u.Password != Password(password, Salt()) {
+	if u.Password != Password(password, u.Salt) {
 		return u, errors.New("密码错误")
 	}
 	return u, nil
