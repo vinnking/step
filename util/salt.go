@@ -65,15 +65,15 @@ func Salt(size int, number int, lower int, upper int) (string, error) {
 
 	// 按需要生成字符串
 	var result string
-	if lower >= 0 {
+	if lower > 0 {
 		lowers := string(Lower(lower))
 		result += lowers
 	}
-	if number >= 0 {
+	if number > 0 {
 		numbers := string(Number(number))
 		result += numbers
 	}
-	if upper >= 0 {
+	if upper > 0 {
 		uppers := string(Upper(upper))
 		result += uppers
 	}

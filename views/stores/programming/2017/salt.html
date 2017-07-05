@@ -1,0 +1,138 @@
+<main class="col-md-12 main-content">
+	<article class="post">
+		<h2 class="text-center">golang生成一个盐</h2>
+		
+		<h4 class="text-center">zhgxun<small> 2017年07月05日</small></h4>
+		
+		<hr />
+		
+		<p>有时候业务可能需要生成一个随机字符串，而我们希望包括的字符类型多一些，在go标准库中没有这样的包，不能开箱即用。</p>
+		
+		<p>而基本字符在ASCII表中有确定的值，这些值在主流的编码系统中都是统一的，不分操作系统和编程语言，这一点确实给我们带来了便利。以下案例中使用的rand为标准数学库 <strong>math/rand</strong>。通过该编码值，我们可以轻松的不用复写这些字符，只需要知道属于它们的边界，在此基础上增加到某个位置，就可以获取到该字符。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">import (
+    &quot;math/rand&quot;
+)</code></pre></div>
+		
+		<h4 id="toc_1">1、生成一串随机的数字字符串</h4>
+		
+		<p>数字字符0-9在ASCII表中对应的十进制值是48-57，因此可以使用基于底数48，随机生成一个0-9之间的数字来随机取一个数字。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">// Number 随机生成size个数字
+func Number(size int) []byte {
+    if size &lt;= 0 || size &gt; 10 {
+        size = 10
+    }
+    warehouse := []int{48, 57}
+    result := make([]byte, 10)
+    rand.Seed(time.Now().UnixNano())
+    for i := 0; i &lt; size; i++ {
+        result[i] = uint8(warehouse[0] + rand.Intn(9))
+    }
+    return result
+}</code></pre></div>
+		
+		<h4 id="toc_2">2、生成一串小写字母</h4>
+		
+		<p>小写字母在ASCII表中对应的十进制数值是97-122。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">// Lower 随机生成size个小写字母
+func Lower(size int) []byte {
+    if size &lt;= 0 || size &gt; 26 {
+        size = 26
+    }
+    warehouse := []int{97, 122}
+    result := make([]byte, 26)
+    rand.Seed(time.Now().UnixNano())
+    for i := 0; i &lt; size; i++ {
+        result[i] = uint8(warehouse[0] + rand.Intn(26))
+    }
+    return result
+}</code></pre></div>
+		
+		<h4 id="toc_3">3、生成一串大写字母</h4>
+		
+		<p>小写字母在ASCII表中对应的十进制数值是65-90。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">// Lower 随机生成size个小写字母
+func Upper(size int) []byte {
+    if size &lt;= 0 || size &gt; 26 {
+        size = 26
+    }
+    warehouse := []int{65, 90}
+    result := make([]byte, 26)
+    rand.Seed(time.Now().UnixNano())
+    for i := 0; i &lt; size; i++ {
+        result[i] = uint8(warehouse[0] + rand.Intn(26))
+    }
+    return result
+}</code></pre></div>
+		
+		<h4 id="toc_4">4、按照需要的字符串长度和包含的数字，大小写字母数量，生成一个随机字符串</h4>
+		
+		<div><pre class="line-numbers"><code class="language-go">// Salt 生成一个盐值
+func Salt(size int, number int, lower int, upper int) (string, error) {
+    // 参数校验
+    length := number + lower + upper
+    if size &gt; length || length &lt;= 0 {
+        return &quot;&quot;, errors.New(&quot;非法的长度&quot;)
+    }
+    switch {
+    case number &lt; 0, number &gt; 10:
+        return &quot;&quot;, errors.New(&quot;允许的数字范围0-10&quot;)
+    case lower &lt; 0, upper &lt; 0, lower &gt; 26, upper &gt; 26:
+        return &quot;&quot;, errors.New(&quot;允许的字母范围0-26&quot;)
+    }
+
+    // 按需要生成字符串
+    var result string
+    if lower &gt; 0 {
+        lowers := string(Lower(lower))
+        result += lowers
+    }
+    if number &gt; 0 {
+        numbers := string(Number(number))
+        result += numbers
+    }
+    if upper &gt; 0 {
+        uppers := string(Upper(upper))
+        result += uppers
+    }
+
+    return result, nil
+}</code></pre></div>
+		
+		<h4 id="toc_5">5、使用方式</h4>
+		
+		<p>比如本地环境</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">package main
+
+import (
+    &quot;step/util&quot;
+    &quot;fmt&quot;
+)
+
+func main() {
+    // 生成一个长度为6, 数字, 大小写字母分别有2位的字符串
+    s1, err := util.Salt(6, 2, 2, 2)
+    if err != nil {
+        fmt.Println(err)
+    }
+    fmt.Println(s1)
+    
+    // 生成一个长度为8, 数字0个, 大写字母3个, 小写字母5个的字符串
+    s2, err := util.Salt(8, 0, 5, 3)
+    if err != nil {
+        fmt.Println(err)
+    }
+    fmt.Println(s2)
+}</code></pre></div>
+		
+		<p>输出效果:</p>
+		
+		<p><img class="img-responsive" src="https://raw.githubusercontent.com/zhgxun/images/master/programming/salt.jpeg" alt="输出效果"></p>
+		
+		<p>没有加入特殊字符，比如*，#等混淆，这些字符在ASCII表中都有对应的值。在输出盐时也没有打乱顺序，没有注意到标准库中是否有打乱字符串的函数，就没自己去实现了。</p>
+	</article>
+</main>
