@@ -1,4 +1,5 @@
 <form method="post" action="/quote/{{if .isNewRecord}}create{{else}}update/{{.quote.Id}}{{end}}">
+    {{.xsrf}}
     <div class="form-group">
         <label for="author">作者</label>
         <input type="text" class="form-control" id="author" name="author" value="{{.quote.Author}}" placeholder="请输入作者" {{if .isNewRecord}}{{else}}readonly{{end}}>

@@ -3,6 +3,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"strconv"
 	"strings"
 	"time"
@@ -59,6 +60,7 @@ func (q *QuoteController) Create() {
 
 	q.Data["isNewRecord"] = true
 	q.Data["quote"] = models.Quote{}
+	q.Data["xsrf"] = template.HTML(q.XSRFFormHTML())
 	q.Layout = "base.html"
 	q.TplName = "quote/create.html"
 }
@@ -105,6 +107,7 @@ func (q *QuoteController) Update() {
 
 	q.Data["isNewRecord"] = false
 	q.Data["quote"] = quote
+	q.Data["xsrf"] = template.HTML(q.XSRFFormHTML())
 	q.Layout = "base.html"
 	q.TplName = "quote/update.html"
 }

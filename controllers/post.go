@@ -3,6 +3,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"strconv"
 	"strings"
 	"time"
@@ -98,6 +99,7 @@ func (p *PostController) Create() {
 	p.Data["post"] = models.Post{}
 	p.Data["types"] = models.Menus()
 	p.Data["labels"] = models.LabelList()
+	p.Data["xsrf"] = template.HTML(p.XSRFFormHTML())
 	p.Layout = "base.html"
 	p.TplName = "post/create.html"
 }
@@ -183,6 +185,7 @@ func (p *PostController) Update() {
 	p.Data["types"] = models.Menus()
 	p.Data["labels"] = models.LabelList()
 	p.Data["hasLabels"] = models.PostLabelList(1, int64(id))
+	p.Data["xsrf"] = template.HTML(p.XSRFFormHTML())
 	p.Layout = "base.html"
 	p.TplName = "post/update.html"
 }

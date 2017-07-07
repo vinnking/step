@@ -10,7 +10,7 @@ func init() {
 	// 首页, 详情页, 标签
 	beego.Router("/?:id([0-9]+)", &controllers.MainController{})
 	beego.Router("/view/:id([0-9]+)", &controllers.MainController{}, "GET:View")
-	beego.Router("/label/:id([0-9]+)", &controllers.MainController{}, "GET:Label")
+	beego.Router("/labels/:id([0-9]+)", &controllers.MainController{}, "GET:Label")
 	
 	// 管理员登陆和退出
 	beego.Router("/auth/login", &controllers.AuthController{}, "GET,POST:Login")

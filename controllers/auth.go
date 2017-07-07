@@ -2,6 +2,7 @@
 package controllers
 
 import (
+	"html/template"
 	"strconv"
 	"strings"
 
@@ -41,6 +42,7 @@ func (a *AuthController) Login() {
 		)
 		a.Redirect("/post", 302)
 	}
+	a.Data["xsrf"] = template.HTML(a.XSRFFormHTML())
 	a.TplName = "login.html"
 }
 

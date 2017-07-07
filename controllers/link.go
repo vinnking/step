@@ -3,6 +3,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"strconv"
 	"strings"
 
@@ -67,6 +68,7 @@ func (l *LinkController) Create() {
 	l.Data["isNewRecord"] = true
 	l.Data["link"] = models.Link{}
 	l.Data["types"] = models.LinkTypeList()
+	l.Data["xsrf"] = template.HTML(l.XSRFFormHTML())
 	l.Layout = "base.html"
 	l.TplName = "link/create.html"
 }
@@ -118,6 +120,7 @@ func (l *LinkController) Update() {
 	l.Data["isNewRecord"] = false
 	l.Data["link"] = link
 	l.Data["types"] = models.LinkTypeList()
+	l.Data["xsrf"] = template.HTML(l.XSRFFormHTML())
 	l.Layout = "base.html"
 	l.TplName = "link/update.html"
 }

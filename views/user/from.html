@@ -1,4 +1,5 @@
 <form method="post" action="/user/{{if .isNewRecord}}create{{else}}update/{{.user.Id}}{{end}}">
+    {{.xsrf}}
     <div class="form-group">
         <label for="nickname">昵称(显示用, 可不唯一)</label>
         <input type="text" class="form-control" id="nickname" name="nickname" value="{{.user.Nickname}}" placeholder="请输入昵称">

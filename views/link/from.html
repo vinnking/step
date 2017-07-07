@@ -1,4 +1,5 @@
 <form method="post" action="/link/{{if .isNewRecord}}create{{else}}update/{{.link.Id}}{{end}}">
+    {{.xsrf}}
     <div class="form-group">
         <label for="type">类型</label>
         <select class="form-control" id="type" name="type">

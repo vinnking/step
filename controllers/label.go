@@ -3,6 +3,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"strconv"
 	"strings"
 
@@ -53,6 +54,7 @@ func (l *LabelController) Create() {
 
 	l.Data["isNewRecord"] = true
 	l.Data["label"] = models.Label{}
+	l.Data["xsrf"] = template.HTML(l.XSRFFormHTML())
 	l.Layout = "base.html"
 	l.TplName = "label/create.html"
 }
@@ -96,6 +98,7 @@ func (l *LabelController) Update() {
 
 	l.Data["isNewRecord"] = false
 	l.Data["label"] = label
+	l.Data["xsrf"] = template.HTML(l.XSRFFormHTML())
 	l.Layout = "base.html"
 	l.TplName = "label/update.html"
 }

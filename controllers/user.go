@@ -3,6 +3,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"strconv"
 	"strings"
 	"time"
@@ -69,6 +70,7 @@ func (u *UserController) Create() {
 	u.Data["roles"] = models.Roles()
 	u.Data["user"] = models.User{}
 	u.Data["isNewRecord"] = true
+	u.Data["xsrf"] = template.HTML(u.XSRFFormHTML())
 	u.Layout = "base.html"
 	u.TplName = "user/create.html"
 }
@@ -125,6 +127,7 @@ func (u *UserController) Update() {
 	u.Data["user"] = user
 	u.Data["isNewRecord"] = false
 	u.Data["roles"] = models.Roles()
+	u.Data["xsrf"] = template.HTML(u.XSRFFormHTML())
 	u.Layout = "base.html"
 	u.TplName = "user/update.html"
 }

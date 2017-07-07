@@ -1,4 +1,5 @@
 <form method="post" action="/post/{{if .isNewRecord}}create{{else}}update/{{.post.Id}}{{end}}">
+    {{.xsrf}}
     <div class="form-group">
         <label for="title">标题</label>
         <input type="text" class="form-control" id="title" name="title" value="{{.post.Title}}" placeholder="请输入标题">
