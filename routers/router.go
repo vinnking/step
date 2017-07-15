@@ -11,7 +11,7 @@ func init() {
 	beego.Router("/?:id([0-9]+)", &controllers.MainController{})
 	beego.Router("/view/:id([0-9]+)", &controllers.MainController{}, "GET:View")
 	beego.Router("/labels/:id([0-9]+)", &controllers.MainController{}, "GET:Label")
-	
+
 	// 管理员登陆和退出
 	beego.Router("/auth/login", &controllers.AuthController{}, "GET,POST:Login")
 	beego.Router("/auth/logout", &controllers.AuthController{}, "GET,POST:Logout")
@@ -43,7 +43,7 @@ func init() {
 	beego.Router("/link/:id([0-9]+)", &controllers.LinkController{}, "GET,POST:View")
 	beego.Router("/link/update/:id([0-9]+)", &controllers.LinkController{}, "GET,POST:Update")
 	beego.Router("/link/delete/:id([0-9]+)", &controllers.LinkController{}, "GET:Delete")
-	
+
 	// 文章
 	beego.Router("/post", &controllers.PostController{}, "GET:Index")
 	beego.Router("/post/create", &controllers.PostController{}, "GET,POST:Create")

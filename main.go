@@ -12,7 +12,11 @@ import (
 )
 
 func init() {
-	orm.RegisterDataBase("default", "mysql", beego.AppConfig.String("mysql.username")+":"+beego.AppConfig.String("mysql.password")+"@/"+beego.AppConfig.String("mysql.daname"))
+	orm.RegisterDataBase(
+		"default",
+		"mysql",
+		beego.AppConfig.String("mysql.username")+":"+beego.AppConfig.String("mysql.password")+"@/"+beego.AppConfig.String("mysql.daname"),
+	)
 	orm.RegisterModel(
 		new(models.User),
 		new(models.Quote),

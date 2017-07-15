@@ -76,7 +76,7 @@ func (m *MainController) Label() {
 			labelId = 1
 		}
 	}
-	
+
 	m.Data["quote"] = models.QuoteOne()
 	m.Data["menus"] = menuList
 	m.Data["cateId"] = 0
