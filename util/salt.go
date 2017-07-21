@@ -35,7 +35,7 @@ func Lower(size int) []byte {
 	return result
 }
 
-// Lower 随机生成size个小写字母
+// Lower 随机生成size个大写字母
 func Upper(size int) []byte {
 	if size <= 0 || size > 26 {
 		size = 26

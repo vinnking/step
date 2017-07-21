@@ -1,0 +1,635 @@
+<main class="col-md-12 main-content">
+	<article class="post">
+		<h2 class="text-center">Go database/sql 教程</h2>
+		
+		<h4 class="text-center">zhgxun<small> 2017年07月21日</small></h4>
+		
+		<hr />
+		
+		<p>说明：内容来源于<a href="http://go-database-sql.org/index.html">Go database/sql tutorial</a>，通过谷歌翻译完成。文档翻译成中文后，很多意思会被语言本身造成误解，请查看英文原文。</p>
+		
+		<p>在Go中使用SQL或类SQL数据库的惯用方法是通过 database/sql 包。 它为面向行的数据库提供了轻量级的接口。 这个网站对最常见的方面如何使用提供一个参考。</p>
+		
+		<p>为什么需要这样？软件包的文档告诉你所有操作，但它并没有告诉你如何使用这个软件包。我们中的许多人发现自己希望能够快速参考和“入门”的方式来讲述故事而不是列举事实。欢迎贡献，请在<a href="https://github.com/VividCortex/go-database-sql-tutorial">这里</a>提交请求。</p>
+		
+		<h2 id="toc_1">1、概观</h2>
+		
+		<p>在Go中访问数据库，需要使用<strong>sql.DB</strong>类型。你可以使用此类型创建语句和事务，执行查询和获取结果。</p>
+		
+		<p>你应该知道的第一件事是，一个<strong>sql.DB</strong>不是一个数据库连接。 它也不是对任何一个特定数据库软件的概念如数据库或模式的映射。它是一个接口的抽象和数据库存在，很可能就像本地文件一样多样化，通过网络连接，内存或进程访问。</p>
+		
+		<p><strong>sql.DB</strong>在下列场景中执行一些重要任务：</p>
+		
+		<ol>
+			<li><p>它通过驱动程序打开和关闭与实际底层数据库的连接。</p></li>
+			<li><p>它根据需要管理一个连接池，这可能是下文所提到的各种各样的事情。</p></li>
+		</ol>
+		
+		<p><strong>sql.DB</strong>抽象旨在让你不必担心如何管理对底层数据存储的并发访问。当你使用它来执行任务时，连接被标记为可用，然后在不再使用时返回到可用池。一个后果是，如果你无法将连接释放到池中，则可能导致<strong>db.SQL</strong>打开大量连接，可能会耗尽资源（太多连接，打开的文件句柄太多，缺少可用网络端口等）。 我们稍后再讨论一下。</p>
+		
+		<p>创建<strong>sql.DB</strong>后，可以使用它来查询它所代表的数据库，以及创建语句和事务。</p>
+		
+		<h2 id="toc_2">2、导入数据库驱动</h2>
+		
+		<p>要使用 database/sql ，你需要该程序包本身，以及要使用的特定数据库的驱动程序（因为官方提供的包只是提供接口，没有指定任何具体数据库类型实现）。</p>
+		
+		<p>你通常不应直接使用该驱动程序包，尽管有些驱动开发者鼓励你这样做（在我们看来，这通常是一个糟糕的想法）。相反，如果可能，你的代码应该仅引用 database/sql 中定义的类型。这有助于避免使你的代码取决于驱动程序，以便你可以以最小的代码更改来更改底层驱动程序（或你正在使用的数据库）。它也强制你使用Go习语，而不是特定的驱动程序作者可能提供的特殊习语。</p>
+		
+		<p>在本文档中，我们将使用@julienschmidt和@arnehormann实现的优秀<a href="https://github.com/go-sql-driver/mysql">MySQL</a>驱动程序作为例子。</p>
+		
+		<p>将以下内容添加到Go源文件的顶部：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">import (
+    &quot;database/sql&quot;
+    _ &quot;github.com/go-sql-driver/mysql&quot;
+)</code></pre></div>
+		
+		<p>请注意，我们将匿名加载驱动程序，将其限定符别名为 _（仅初始化包），因此我们的代码中没有一个导出的名称可见。 在引擎下，驱动程序将其自身注册为可用的 database/sql 包，但通常没有其他情况发生。</p>
+		
+		<p>现在，你已准备好访问数据库。</p>
+		
+		<h2 id="toc_3">3、访问数据库</h2>
+		
+		<p>现在你已经加载了驱动程序包，就可以创建一个数据库对象 <strong>sql.DB</strong>。</p>
+		
+		<p>要创建一个<strong>sql.DB</strong>，使用 <strong>sql.Open()</strong>。 这返回一个 *<strong>sql.DB</strong> 指针类型：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">func main() {
+    db, err := sql.Open(&quot;mysql&quot;, &quot;user:password@tcp(127.0.0.1:3306)/hello&quot;)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+}</code></pre></div>
+		
+		<p>在示例中，我们说明了几件事情：</p>
+		
+		<ol>
+			<li><p><strong>sql.Open()</strong>的第一个参数是驱动程序名称。 这是驱动程序用于向 database/sql 注册的字符串，并且通常与包名称相同以避免混淆。 例如，它是github.com/go-sql-driver/mysql的mysql。 某些驱动程序不符合惯例并使用数据库名称，例如 github.com/mattn/go-sqlite3的sqlite3和github.com/lib/pq的postgres。</p></li>
+			<li><p>第二个参数是一个特定于驱动程序的语法，它告诉驱动程序如何访问底层数据存储。 在这个例子中，我们连接到本地MySQL服务器实例中的“hello”数据库。</p></li>
+			<li><p>你应该（几乎）总是检查并处理从所有 database/sql 操作返回的错误。 有一些特殊情况，我们稍后将讨论这样做是没有意义的。</p></li>
+			<li><p>如果<strong>sql.DB</strong>没有超出该函数的生命周期在作用域范围内，则 <strong>defer db.Close()</strong>是惯用的。</p></li>
+		</ol>
+		
+		<p>也许反直觉地，<strong>sql.Open()</strong>不建立与数据库的任何连接，也不会验证驱动程序连接参数。相反，它只是准备数据库抽象以供以后使用。首次实际连接到底层数据存储区将在第一次需要时懒惰地建立。如果要立即检查数据库是否可用（例如，检查是否可以建立网络连接并登录），请使用<strong>db.Ping()</strong>来执行此操作，并记住检查错误：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">err = db.Ping()
+if err != nil {
+    // do something here
+}</code></pre></div>
+		
+		<p>尽管在完成数据库之后<strong>Close()</strong>数据库是惯用的，但是<strong>sql.DB</strong>对象被设计为常驻内存。不要经常<strong>Open()</strong>和<strong>Close()</strong>数据库。相反，为你需要访问的每个不同的数据存储创建一个<strong>sql.DB</strong>对象，并保留它，直到程序完成访问该数据存储。根据需要传递，或使其在全局范围内可用，但保持开放。并且不要从临时的函数中<strong>Open()</strong>和<strong>Close()</strong>它。相反，将<strong>sql.DB</strong>作为参数传递给该临时函数。</p>
+		
+		<p>如果你不将<strong>sql.DB</strong>视为长期存在的对象，则可能会遇到诸如重复使用和连接共享不足，可用网络资源耗尽以及由于TIME_WAIT中剩余的大量TCP连接而导致的零星故障的问题状态。 这样的问题是你没有像设计那样使用 database/sql 的迹象。</p>
+		
+		<p>现在是时候使用你的<strong>sql.DB</strong>对象了。</p>
+		
+		<h2 id="toc_4">4、检索结果集</h2>
+		
+		<p>有几个惯用的操作来从数据存储中检索结果。</p>
+		
+		<ol>
+			<li>执行返回行的查询。</li>
+			<li>准备重复使用的语句，执行多次，并将其销毁。</li>
+			<li>以一次性方式执行声明，而无需重复使用。</li>
+			<li>执行返回一行的查询。 这个特殊情况有一个特殊的情形。</li>
+		</ol>
+		
+		<p>Go的 database/sql 函数名称很重要。如果一个函数名称包含<strong>Query</strong>，它被设计为询问数据库的问题，并返回一组行，即使它是空的。 不返回行的语句不应使用<strong>Query</strong>函数; 他们应该使用<strong>Exec()</strong>。</p>
+		
+		<h3 id="toc_5">4.1 从数据库获取数据</h3>
+		
+		<p>让我们来看一下如何查询数据库，使用结果的例子。 我们将向用户表查询ID为1的用户，并打印出用户的ID和名称。 我们将使用<strong>rows.Scan()</strong>将结果分配给变量，一次一行。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">var (
+    id   int
+    name string
+)
+rows, err := db.Query(&quot;select id, name from users where id = ?&quot;, 1)
+if err != nil {
+    log.Fatal(err)
+}
+defer rows.Close()
+for rows.Next() {
+    err := rows.Scan(&amp;id, &amp;name)
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Println(id, name)
+}
+err = rows.Err()
+if err != nil {
+    log.Fatal(err)
+}</code></pre></div>
+		
+		<p>以上代码中发生了什么：</p>
+		
+		<ol>
+			<li>我们使用<strong>db.Query()</strong>将查询发送到数据库。 我们像往常一样检查错误。</li>
+			<li>我们使用<strong>defer rows.Close()</strong>。 这个非常重要。</li>
+			<li>我们用<strong>rows.Next()</strong>迭代行。</li>
+			<li>我们用<strong>rows.Scan()</strong>读取每行中的列变量。</li>
+			<li>我们完成遍历行后我们检查遍历中是否产生错误。</li>
+		</ol>
+		
+		<p>这几乎是Go中唯一的办法。 例如，你不能得到一行作为map。 这是因为一切都是强类型的。 你需要创建正确类型的变量并将指针传递给它们，正如上面所看到的。</p>
+		
+		<p>其中的几个部分容易出错，可能会产生不良后果。</p>
+		
+		<ul>
+			<li><p>你应该始终检查<strong>for rows.Next()</strong>循环结尾处的错误。 如果循环中出现错误，则需要了解它。 不要仅仅假定循环遍历，直到你已经处理了所有的行。</p></li>
+			<li><p>第二，只要有一个打开的结果集（由行代表），底层连接就是忙，不能用于任何其他查询。 这意味着它在连接池中不可用。 如果你使用<strong>rows.Next()</strong>迭代所有行，最终将读取最后一行，<strong>rows.Next()</strong>将遇到内部EOF错误，并为你调用<strong>rows.Close()</strong>。 但是，如果由于某种原因退出该循环 - 早期返回等等，那么行不会关闭，并且连接保持打开状态。 （如果<strong>rows.Next()</strong>由于错误而返回false，则会自动关闭）。 这是一种耗尽资源的简单方法。</p></li>
+			<li><p><strong>rows.Close()</strong>是一个无害的操作，如果它已经关闭，所以你可以多次调用它。 但是请注意，我们首先检查错误，如果没有错误，则只调用<strong>rows.Close()</strong>，以避免运行时的紧急情况。</p></li>
+			<li><p>你应该总是<strong>defer rows.Close()</strong>，即使你也在循环结束时调用<strong>rows.Close()</strong>，这不是一个坏主意。</p></li>
+			<li><p>不要在循环中延迟(defer)。 延迟语句在函数退出之前不会执行，所以长时间运行的函数不应该使用它。 如果你这样做，你会慢慢积累记忆。 如果你在循环中反复查询和使用结果集，则在完成每个结果后应显式调用<strong>rows.Close()</strong>，而不使用延迟(defer)。</p></li>
+		</ul>
+		
+		<h3 id="toc_6">4.2 Scan()如何工作</h3>
+		
+		<p>当你迭代行并将其扫描到目标变量中时，Go会在幕后为你执行数据类型转换。 它基于目标变量的类型。 意识到这可以清理你的代码，并帮助避免重复工作。</p>
+		
+		<p>例如，假设你从使用字符串列定义的表中选择一些行，例如<strong>VARCHAR(45)</strong>或类似的列。 然而，你恰好知道表格总是包含数字。 如果将指针传递给字符串，Go会将字节复制到字符串中。 现在可以使用<strong>strconv.ParseInt()</strong>或类似的方式将值转换为数字。 你必须检查SQL操作中的错误以及解析整数的错误。 这是杂乱而乏味的。</p>
+		
+		<p>或者，你只需将<strong>Scan()</strong>指针指向一个整数即可。 Go会检测到并为你调用<strong>strconv.ParseInt()</strong>。 如果转换出现错误，则调用<strong>Scan()</strong>将返回。 你的代码现在越来越小了。 这是推荐使用 database/sql 的方法。</p>
+		
+		<h3 id="toc_7">4.3 准备查询</h3>
+		
+		<p>一般来说，你应该总是准备多次使用查询。 准备查询的结果是一个准备语句，可以为执行语句时提供的参数提供占位符（a.k.a. bind值）。 这比连接字符串要好得多，因为所有通常的原因（例如避免SQL注入攻击）。</p>
+		
+		<p>在MySQL中，参数占位符为？，在PostgreSQL中为N，其中$N为数字。 SQLite接受这两者之一。 在Oracle占位符中以冒号开始，并命名为：param1。 我们会用?因为我们以MySQL为例。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">stmt, err := db.Prepare(&quot;select id, name from users where id = ?&quot;)
+if err != nil {
+    log.Fatal(err)
+}
+defer stmt.Close()
+rows, err := stmt.Query(1)
+if err != nil {
+    log.Fatal(err)
+}
+defer rows.Close()
+for rows.Next() {
+    // ...
+}
+if err = rows.Err(); err != nil {
+    log.Fatal(err)
+}</code></pre></div>
+		
+		<p>在引擎下，<strong>db.Query()</strong>实际上准备，执行和关闭一个准备好的语句。 这是数据库的三次往返。 如果你不小心，你的应用程序可以将数据库交互的数量增加三倍！ 某些驱动程序可以在特定情况下避免这种情况，但并不是所有驱动程序都可以。 </p>
+		
+		<h3 id="toc_8">4.4 单行查询</h3>
+		
+		<p>如果一个查询返回最多一行，可以使用一些快速的样板代码：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">var name string
+err = db.QueryRow(&quot;select name from users where id = ?&quot;, 1).Scan(&amp;name)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(name)</code></pre></div>
+		
+		<p>来自查询的错误将延迟到调用<strong>Scan()</strong>，然后从中返回。 你也可以在准备的语句中调用<strong>QueryRow()</strong>：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">stmt, err := db.Prepare(&quot;select name from users where id = ?&quot;)
+if err != nil {
+    log.Fatal(err)
+}
+var name string
+err = stmt.QueryRow(1).Scan(&amp;name)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(name)</code></pre></div>
+		
+		<h2 id="toc_9">5、修改数据和使用事务</h2>
+		
+		<p>现在我们已经准备好了解如何修改数据和处理事务。 如果你习惯于使用“statement”对象来获取行并更新数据，那么这种区别可能似乎是人为的，但是在Go中有一个重要的原因。</p>
+		
+		<h3 id="toc_10">5.1 改数据的语句</h3>
+		
+		<p>使用<strong>Exec()</strong>，最好用一个准备好的语句来完成INSERT，UPDATE，DELETE或者其他不返回行的语句。 以下示例显示如何插入行并检查有关操作的元数据：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">stmt, err := db.Prepare(&quot;INSERT INTO users(name) VALUES(?)&quot;)
+if err != nil {
+    log.Fatal(err)
+}
+res, err := stmt.Exec(&quot;Dolly&quot;)
+if err != nil {
+    log.Fatal(err)
+}
+lastId, err := res.LastInsertId()
+if err != nil {
+    log.Fatal(err)
+}
+rowCnt, err := res.RowsAffected()
+if err != nil {
+    log.Fatal(err)
+}
+log.Printf(&quot;ID = %d, affected = %d\n&quot;, lastId, rowCnt)</code></pre></div>
+		
+		<p>执行该语句将生成一个<strong>sql.Result</strong>，它可以访问语句元数据：最后插入的ID和受影响的行数。</p>
+		
+		<p>如果你不关心结果怎么办？ 如果你只想执行一个语句并检查是否有任何错误，但忽略结果怎么办？ 以下两句话不会做同样的事情吗？</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">_, err := db.Exec(&quot;DELETE FROM users&quot;)  // OK
+_, err := db.Query(&quot;DELETE FROM users&quot;) // BAD</code></pre></div>
+		
+		<p>答案是不。 他们不做同样的事情，你不应该使用这样的<strong>Query()</strong>。 <strong>Query()</strong>将返回一个<strong>sql.Rows</strong>，它保留数据库连接，直到<strong>sql.Rows</strong>关闭。 由于可能有未读数据（例如更多的数据行），所以不能使用连接。 在上面的示例中，连接将永远不会被释放。 垃圾收集器最终会关闭底层的<strong>net.Conn</strong>，但这可能需要很长时间。 此外， database/sql 包将继续跟踪池中的连接，希望在某个时候释放它，以便可以再次使用连接。 因此，这种反模式是耗尽资源（例如连接数太多）的好方法。</p>
+		
+		<h3 id="toc_11">5.2 处理事务</h3>
+		
+		<p>在Go中，事务本质上是保留与数据存储的连接的对象。 它允许你执行我们迄今为止所看到的所有操作，但保证它们将在同一连接上执行。</p>
+		
+		<p>你可以通过调用<strong>db.Begin()</strong>开始一个事务，并在结果Tx变量上用<strong>Commit()</strong>或<strong>Rollback()</strong>方法关闭它。 在该种模式下，Tx从池中获取连接，并保留它仅用于该事务。 Tx上的方法一对一到可以调用数据库本身的方法，例如<strong>Query()</strong>等等。</p>
+		
+		<p>在事务中创建的准备语句仅限于该事务。</p>
+		
+		<p>你不应该在SQL代码中混合使用与事务相关的函数（如<strong>Begin()</strong>）和<strong>Commit()</strong>与SQL语句（如<strong>BEGIN</strong>和<strong>COMMIT</strong>）。 可能会导致糟糕的结果。</p>
+		
+		<ul>
+			<li>Tx对象可能保持打开状态，从池中保留连接，而不返回。</li>
+			<li>数据库的状态可能与表示它的Go变量的状态不同步。</li>
+			<li>你可以相信你在事务内部的单个连接上执行查询，实际上Go已经为你创建了几个连接，而且一些语句不是事务的一部分。</li>
+		</ul>
+		
+		<p>当你在事务中工作时，你应该小心不要调用Db变量。 使用<strong>db.Begin()</strong>创建的Tx变量进行所有调用。 Db不在一个事务中，只有Tx是。 如果你进一步调用<strong>db.Exec()</strong>或类似的函数，那么这些调用将发生在事务范围之外，在其他连接上。</p>
+		
+		<p>如果你需要处理多个修改连接状态的语句，那么即使你不希望事务本身，也需要一个Tx。 例如：</p>
+		
+		<ul>
+			<li>创建仅在一个连接中可见的临时表。</li>
+			<li>设置变量，如MySQL SET @var：= somevalue语法。</li>
+			<li>更改连接选项，如字符集或超时。</li>
+		</ul>
+		
+		<p>如果你需要执行任何这些操作，则需要将活动绑定到单个连接，而在Go中执行此操作的唯一方法是使用Tx。</p>
+		
+		<h2 id="toc_12">6、使用准备语句</h2>
+		
+		<p>准备的语句在Go中具有所有常见的优点：安全性，效率，方便性。 但是它们的实现方式与你可能习惯的方式有所不同，特别是与 database/sql 的一些内部操作有关。</p>
+		
+		<h3 id="toc_13">6.1 准备声明和连接</h3>
+		
+		<p>在数据库级别，将准备好的语句绑定到单个数据库连接。 典型的流程是客户端向服务器发送带有占位符的SQL语句以进行准备，服务器使用语句ID进行响应，然后客户端通过发送其ID和参数来执行该语句。</p>
+		
+		<p>然而，在Go中，连接不会直接暴露给 database/sql 包的用户。 你不准备连接上的语句。 你可以在DB或Tx上准备。 并且 database/sql 具有一些方便的行为，如自动重试。 由于这些原因，存在于驱动程序级别的准备语句和连接之间的底层关联将隐藏在代码中。</p>
+		
+		<p>以下是它的工作原理：</p>
+		
+		<p>准备一个语句时，它会在池中的连接上准备好。</p>
+		
+		<ul>
+			<li>Stmt对象会记住使用哪个连接。</li>
+			<li>执行Stmt时，会尝试使用连接。 如果它不可用，因为它关闭或忙着做其他事情，它从池中获得另一个连接，并在另一个连接上重新准备与数据库的语句。</li>
+		</ul>
+		
+		<p>因为在原始连接繁忙时，会根据需要重新准备语句，因此数据库的高并发性使用可能会使很多连接繁忙，从而创建大量的准备语句。 这可能会导致声明的泄漏，正在准备和重新准备的语句比你想象的更多，甚至会在服务器端限制语句数量。</p>
+		
+		<h3 id="toc_14">6.2 避免准备的声明</h3>
+		
+		<p>Go将为你在声明下为你创建准备好的声明。 例如，一个简单的<strong>db.Query(sql，param1，param2)</strong>通过准备sql，然后使用参数执行它，最后关闭语句。</p>
+		
+		<p>有时，准备好的声明不是你想要的。 这可能有几个原因：</p>
+		
+		<ul>
+			<li>数据库不支持准备的语句。 例如，当使用MySQL驱动程序时，你可以连接到MemSQL和Sphinx，因为它们支持MySQL线路协议。 但是他们不支持包含准备语句的“二进制”协议，所以他们可能会混乱的失败。</li>
+			<li>这些语句不会被重用，足以使它们值得，并且安全问题以其他方式处理，因此性能开销是不期望的。 VividCortex博客可以看到一个例子。</li>
+		</ul>
+		
+		<p>如果不想使用预备的语句，则需要使用<strong>fmt.Sprint()</strong>或类似的方法来组合SQL，并将其作为<strong>db.Query()</strong>或<strong>db.QueryRow()</strong>的唯一参数传递。 你的驱动程序需要支持明文查询执行，这是通过Execer和Queryer界面在Go 1.1中添加的。</p>
+		
+		<h3 id="toc_15">6.3 事务准备语句</h3>
+		
+		<p>在Tx中创建的准备语句仅限于它，因此早期关于重新准备的注意事项不适用。 当你对Tx对象进行操作时，你的操作将直接映射到其上唯一的一个连接。</p>
+		
+		<p>这也意味着在Tx内创建的准备语句不能与之分开使用。 同样，在DB中创建的准备语句不能在事务中使用，因为它们将被绑定到不同的连接。</p>
+		
+		<p>要在Tx中使用事务外准备的语句，可以使用<strong>Tx.Stmt()</strong>，它将从事务外部准备的一个新的特定于事务的语句创建。 它通过采用现有的准备语句，设置与事务的连接，并在执行时重新准备所有语句。 这个行为及其实现是不可取的，甚至在 database/sql 源代码中有一个TODO来改进它; 我们建议不要使用这个。</p>
+		
+		<p>在处理事务中的准备语句时，必须小心谨慎。 请考虑以下示例：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">tx, err := db.Begin()
+if err != nil {
+    log.Fatal(err)
+}
+defer tx.Rollback()
+stmt, err := tx.Prepare(&quot;INSERT INTO foo VALUES (?)&quot;)
+if err != nil {
+    log.Fatal(err)
+}
+defer stmt.Close() // danger!
+for i := 0; i &lt; 10; i++ {
+    _, err = stmt.Exec(i)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+err = tx.Commit()
+if err != nil {
+    log.Fatal(err)
+}
+// stmt.Clos runs here</code></pre></div>
+		
+		<p>之前Go 1.4关闭 *sql.Tx将与之关联的连接发回到池中，但是在已经发生的事件之后执行了对准备语句的关闭的延迟调用，这可能导致对底层连接的并发访问， 连接状态不一致。 如果你使用Go 1.4或更早版本，则应在事务提交或回退之前确保语句始终关闭。 这个问题在第131650043号的Go 1.4中得到修正。</p>
+		
+		<h3 id="toc_16">6.4 参数占位符语法</h3>
+		
+		<p>准备语句中的占位符参数的语法是数据库特定的。 例如，比较MySQL，PostgreSQL和Oracle：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">MySQL               PostgreSQL            Oracle
+=====               ==========            ======
+WHERE col = ?       WHERE col = $1        WHERE col = :col
+VALUES(?, ?, ?)     VALUES($1, $2, $3)    VALUES(:val1, :val2, :val3)</code></pre></div>
+		
+		<h2 id="toc_17">7、处理错误</h2>
+		
+		<p>几乎所有使用 database/sql 类型的操作都会返回一个错误作为最后一个值。 你应该总是检查这些错误，不要忽视它们。</p>
+		
+		<p>有几个错误行为是特殊情况的地方，还有一些额外的东西可能需要知道。</p>
+		
+		<h3 id="toc_18">7.1 迭代结果错误</h3>
+		
+		<p>请考虑以下代码：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">for rows.Next() {
+    // ...
+}
+if err = rows.Err(); err != nil {
+    // handle the error here
+}</code></pre></div>
+		
+		<p>来自<strong>rows.Err()</strong>的错误可能是<strong>rows.Next()</strong>循环中各种错误的结果。 除了正常完成循环之外，循环可能会退出，因此你始终需要检查循环是否正常终止。 异常终止自动调用<strong>rows.Close()</strong>，尽管多次调用它是无害的。</p>
+		
+		<h3 id="toc_19">7.3 关闭结果的错误</h3>
+		
+		<p>如前所述，如果你过早退出循环，应该始终显式关闭sql.Rows。 如果循环正常退出或通过错误，它会自动关闭，但你可能会错误地执行此操作：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">for rows.Next() {
+    // ...
+    break // whoops, rows is not closed! memory leak...
+}
+// do the usual &quot;if err = rows.Err()&quot; [omitted here]...
+// it&#39;s always safe to [re?]close here:
+if err = rows.Close(); err != nil {
+    // but what should we do if there&#39;s an error?
+    log.Println(err)
+}</code></pre></div>
+		
+		<p><strong>rows.Close()</strong>返回的错误是一般规则的唯一例外，最好是捕获并检查所有数据库操作中的错误。 如果<strong>rows.Close()</strong>返回错误，那么你应该怎么做。 记录错误消息或panic可能是唯一明智的事情，如果这不明智，那么也许你应该忽略错误。</p>
+		
+		<h3 id="toc_20">7.4 QueryRow()中的错误</h3>
+		
+		<p>考虑以下代码来获取单个行：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">var name string
+err = db.QueryRow(&quot;select name from users where id = ?&quot;, 1).Scan(&amp;name)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(name)</code></pre></div>
+		
+		<p>如果没有id = 1的用户怎么办？ 那么结果中不会有行，而<strong>.Scan()</strong>不会将值扫描到名称中。 那会怎么样？</p>
+		
+		<p>Go定义了一个特殊的错误常数，称为<strong>sql.ErrNoRows</strong>，当结果为空时，它将从<strong>QueryRow()</strong>返回。 这在大多数情况下需要作为特殊情况来处理。 空的结果通常不被应用程序代码认为是错误的，如果不检查错误是否是这个特殊的常量，那么会导致你没有想到的应用程序代码错误。</p>
+		
+		<p>来自查询的错误将延迟到调用<strong>Scan()</strong>，然后从中返回。 上面的代码更好地写成这样：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">var name string
+err = db.QueryRow(&quot;select name from users where id = ?&quot;, 1).Scan(&amp;name)
+if err != nil {
+    if err == sql.ErrNoRows {
+        // there were no rows, but otherwise no error occurred
+    } else {
+        log.Fatal(err)
+    }
+}
+fmt.Println(name)</code></pre></div>
+		
+		<p>人们可能会问为什么一个空的结果集被认为是一个错误。 没有什么错误的空集。 原因是<strong>QueryRow()</strong>方法需要使用这种特殊情况才能让调用者区分是否<strong>QueryRow()</strong>实际上找到一行; 没有它，<strong>Scan()</strong>不会做任何事情，你可能不会意识到你的变量毕竟没有从数据库中获得任何值。</p>
+		
+		<p>当你使用<strong>QueryRow()</strong>时，你应该只会遇到此错误。 如果你在其他地方遇到此错误，那就是你的错误了。</p>
+		
+		<h3 id="toc_21">7.5 识别特定的数据库错误</h3>
+		
+		<p>编写如下代码可能很诱人：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">rows, err := db.Query(&quot;SELECT someval FROM sometable&quot;)
+// err contains:
+// ERROR 1045 (28000): Access denied for user &#39;foo&#39;@&#39;::1&#39; (using password: NO)
+if strings.Contains(err.Error(), &quot;Access denied&quot;) {
+    // Handle the permission-denied error
+}</code></pre></div>
+		
+		<p>这不是最好的办法。 例如，字符串值可能会根据服务器用于发送错误消息的语言而有所不同。 更好的方式是比较错误号码以确定特定错误是什么。</p>
+		
+		<p>然而，这样做的机制因驱动开发者而异，因为这不是 database/sql 本身的一部分。 在本教程重点介绍的MySQL驱动程序中，你可以编写以下代码：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">if driverErr, ok := err.(\*mysql.MySQLError); ok { // Now the error number is accessible directly
+    if driverErr.Number == 1045 {
+        // Handle the permission-denied error
+    }
+}</code></pre></div>
+		
+		<p>再次，这里的MySQLError类型由此特定驱动程序提供，并且驱动程序之间的.Number字段可能不同。 然而，数字的值取自MySQL的错误消息，因此是数据库特定的，而不是驱动程序。</p>
+		
+		<p>这段代码还是很丑的，一个魔术数字，是一个代码味道。 一些驱动程序（虽然不是MySQL的驱动程序，因为这里的主题的原因）提供错误标识符的列表。 例如，Postgres pq驱动程序在error.go中。 还有一个由VividCortex维护的MySQL错误号的外部包。 使用这样的列表，上面的代码写得更好：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">if driverErr, ok := err.(\*mysql.MySQLError); ok {
+    if driverErr.Number == mysqlerr.ER_ACCESS_DENIED_ERROR {
+        // Handle the permission-denied error
+    }
+}</code></pre></div>
+		
+		<h3 id="toc_22">7.6 处理连接错误</h3>
+		
+		<p>如果与数据库的连接被丢弃，被杀或有错误怎么办？</p>
+		
+		<p>当这种情况发生时，你不需要实现任何逻辑来重试失败的语句。 作为 database/sql 中连接池的一部分，内置了处理失败的连接。 如果你执行查询或其他语句并且底层连接发生故障，则Go将重新打开新连接（或仅从连接池获取另一个连接），并重试10次。</p>
+		
+		<p>然而，可能会有一些意想不到的后果。 当其他错误情况发生时，可能会重试某些类型的错误。 这也可能是驱动程序特定的。 MySQL驱动程序发生的一个例子是使用KILL取消不需要的语句（例如长时间运行的查询）会导致语句被重试10次。</p>
+		
+		<h2 id="toc_23">8、使用NULL</h2>
+		
+		<p>可疑的列令人烦恼，并导致许多丑陋的代码。 如果可以的话，避免它们。 如果没有，那么你需要使用 database/sql 包中的特殊类型来处理它们，或者定义你自己的。</p>
+		
+		<p>有可空的布尔值，字符串，整数和浮点数的类型。 以下是你使用它们的方法：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">for rows.Next() {
+    var s sql.NullString
+    err := rows.Scan(&amp;s)
+    // check err
+    if s.Valid {
+        // use s.String
+    } else {
+        // NULL value
+    }
+}</code></pre></div>
+		
+		<p>可空类型的限制，以及避免可空列的原因，以防你需要更有说服力：</p>
+		
+		<ul>
+			<li>没有sql.NullUint64或sql.NullYourFavoriteType。 你需要为此定义自己的。</li>
+			<li>可空性可能是棘手的，而不是未来的。 如果你认为某些内容不会为空，但是你的错误，你的程序将会崩溃，也许很少会发生错误。</li>
+			<li>Go的好处之一是为每个变量提供有用的默认零值。 这不是可空的东西的工作方式。</li>
+		</ul>
+		
+		<p>如果你需要定义自己的类型来处理NULL，则可以复制sql.NullString的设计来实现。</p>
+		
+		<p>如果你不能避免在数据库中具有NULL值，那么大多数数据库系统支持的另一个工作是COALESCE（）。 以下可能是你可以使用的东西，而不会引入无数<strong>sql.Null</strong>*空指针类型。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">rows, err := db.Query(`
+    SELECT
+        name,
+        COALESCE(other_field, &#39;&#39;) as other_field
+    WHERE id = ?
+`, 42)
+
+for rows.Next() {
+    err := rows.Scan(&amp;name, &amp;otherField)
+    // ..
+    // If `other_field` was NULL, `otherField` is now an empty string. This works with other data types as well.
+}</code></pre></div>
+		
+		<h2 id="toc_24">9、使用未知列</h2>
+		
+		<p><strong>Scan()</strong>函数要求你准确传递正确数目的目标变量。 如果你不知道查询将返回什么？</p>
+		
+		<p>如果你不知道查询将返回多少列，则可以使用<strong>Columns()</strong>来查找列名称列表。 你可以检查此列表的长度以查看有多少列，并且可以将切片传递给具有正确数值的<strong>Scan()</strong>。 例如，MySQL的某些fork为<strong>SHOW PROCESSLIST</strong>命令返回不同的列，因此你必须为此准备好，否则将导致错误。 这是一种方法; 还有其他的：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">cols, err := rows.Columns()
+if err != nil {
+    // handle the error
+} else {
+    dest := []interface{}{ // Standard MySQL columns
+        new(uint64), // id
+        new(string), // host
+        new(string), // user
+        new(string), // db
+        new(string), // command
+        new(uint32), // time
+        new(string), // state
+        new(string), // info
+    }
+    if len(cols) == 11 {
+        // Percona Server
+    } else if len(cols) &gt; 8 {
+        // Handle this case
+    }
+    err = rows.Scan(dest...)
+    // Work with the values in dest
+}</code></pre></div>
+		
+		<p>如果你不知道这些列或者它们的类型，你应该使用sql.RawBytes。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">cols, err := rows.Columns() // Remember to check err afterwards
+vals := make([]interface{}, len(cols))
+for i, _ := range cols {
+    vals[i] = new(sql.RawBytes)
+}
+for rows.Next() {
+    err = rows.Scan(vals...)
+    // Now you can check each element of vals for nil-ness,
+    // and you can use type introspection and type assertions
+    // to fetch the column into a typed variable.
+}</code></pre></div>
+		
+		<h2 id="toc_25">10、连接池</h2>
+		
+		<p>database/sql 包中有一个基本的连接池。没有很多的控制或检查能力，但这里有一些你可能会发现有用的知识：</p>
+		
+		<ul>
+			<li>连接池意味着在单个数据库上执行两个连续的语句可能会打开两个连接并单独执行它们。</li>
+			<li>对于程序员来说，为什么他们的代码行为不当，这是相当普遍的。例如，后面跟着INSERT的LOCK TABLES可能会被阻塞，因为INSERT位于不具有表锁定的连接上。</li>
+			<li>连接是在需要时创建的，池中没有空闲的连接。</li>
+			<li>默认情况下，连接数量没有限制。如果你尝试同时执行很多操作，可以创建任意数量的连接。这可能导致数据库返回错误，例如“连接太多”。</li>
+			<li>在Go 1.1或更新版本中，你可以使用<strong>db.SetMaxIdleConns(N)</strong>来限制池中的空闲连接数。这并不限制连接池的大小。</li>
+			<li>在Go 1.2.1或更新版本中，可以使用<strong>db.SetMaxOpenConns(N)</strong>来限制与数据库的总打开连接数。不幸的是，一个死锁bug（修复）阻止<strong>db.SetMaxOpenConns(N)</strong>在1.2中安全使用。</li>
+			<li>连接回收相当快。使用<strong>db.SetMaxIdleConns(N)</strong>设置大量空闲连接可以减少此流失，并有助于保持连接以重新使用。</li>
+			<li>长时间保持连接空闲可能会导致问题（例如Microsoft Azure上的这个问题）。尝试<strong>db.SetMaxIdleConns(0)</strong>如果你连接超时，因为连接空闲时间太长。</li>
+		</ul>
+		
+		<h2 id="toc_26">11、惊喜，反模式和限制</h2>
+		
+		<p>尽管 database/sql 简单，一旦你习惯了它，你可能会惊讶于它支持的用例的微妙。 这是Go的核心库通用的。</p>
+		
+		<h3 id="toc_27">11.1 资源枯竭</h3>
+		
+		<p>如本网站所述，如果你不按预期使用 database/sql ，你一定会为自己造成麻烦，通常通过消耗一些资源或阻止他们有效地重用：</p>
+		
+		<ul>
+			<li>开放和关闭数据库可能会导致资源耗尽。</li>
+			<li>没有读取所有行或使用<strong>rows.Close()</strong>保留来自池的连接。</li>
+			<li>对于不返回行的语句，使用<strong>Query()</strong>将从池中预留一个连接。</li>
+			<li>没有意识到准备好的语句如何工作可以导致大量额外的数据库活动。</li>
+		</ul>
+		
+		<h3 id="toc_28">11.2 大uint64值</h3>
+		
+		<p>这是一个惊人的错误。 如果设置了高位，则不能将大的无符号整数作为参数传递给语句：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">_, err := db.Exec(&quot;INSERT INTO users(id) VALUES&quot;, math.MaxUint64) // Error</code></pre></div>
+		
+		<p>这会引发错误。 如果你使用uint64值，请小心，因为它们可能开始小而且无错误地工作，但会随着时间的推移而增加，并开始抛出错误。</p>
+		
+		<h3 id="toc_29">11.3 连接状态不匹配</h3>
+		
+		<p>有些事情可以改变连接状态，这可能会导致问题有两个原因：</p>
+		
+		<ul>
+			<li>某些连接状态，例如是否处于事务中，应该通过Go类型来处理。</li>
+			<li>你可能假设你的查询在单个连接上运行。</li>
+		</ul>
+		
+		<p>例如，使用USE语句设置当前数据库对于许多人来说是一个典型的事情。 但是在Go中，它只会影响你运行它的连接。除非你处于事务中，否则你认为在该连接上执行的其他语句实际上可能在从池中获取的不同连接上运行，因此他们将看不到这种变化的影响。</p>
+		
+		<p>此外，更改连接后，它将返回到池，并可能会污染其他代码的状态。 这就是为什么你不应该直接将BEGIN或COMMIT语句作为SQL命令发出的原因之一。</p>
+		
+		<h3 id="toc_30">11.4 数据库特定语法</h3>
+		
+		<p>database/sql API提供了面向行数据库的抽象，但是具体的数据库和驱动程序可能会在行为和/或语法上有差异，例如准备好的语句占位符。</p>
+		
+		<h3 id="toc_31">11.5 多个结果集</h3>
+		
+		<p>Go驱动程序以任何方式不支持单个查询中的多个结果集，尽管有一个支持大容量操作（如批量复制）的功能请求似乎没有任何计划。</p>
+		
+		<p>这意味着，除了别的以外，返回多个结果集的存储过程将无法正常工作。</p>
+		
+		<h3 id="toc_32">11.6 调用存储过程</h3>
+		
+		<p>调用存储过程是特定于驱动程序的，但在MySQL驱动程序中，目前无法完成。 看来你可以调用一个简单的过程来返回一个单一的结果集，通过执行这样的操作：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">err := db.QueryRow(&quot;CALL mydb.myprocedure&quot;).Scan(&amp;result) // Error</code></pre></div>
+		
+		<p>其实这不行。 你将收到以下错误：错误1312：PROCEDURE mydb.myprocedure无法返回给定上下文中的结果集。 这是因为MySQL期望将连接设置为多语句模式，即使是单个结果，并且驱动程序当前没有执行此操作（尽管看到此问题）。</p>
+		
+		<h3 id="toc_33">11.7 多重语句支持</h3>
+		
+		<p>database/sql 没有显式地有多个语句支持，这意味着这个行为是后端依赖的：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">_, err := db.Exec(&quot;DELETE FROM tbl1; DELETE FROM tbl2&quot;) // Error/unpredictable result</code></pre></div>
+		
+		<p>服务器被允许解释它，但它需要，其中可能包括返回错误，只执行第一个语句，或执行两者。</p>
+		
+		<p>同样，在事务中没有办法批处理语句。 事务中的每个语句必须连续执行，并且结果中的资源（如行或行）必须被扫描或关闭，以便底层连接可供下一个语句使用。 当你不使用事务时，这与通常的行为不同。 在这种情况下，完全可以执行查询，循环遍历行，并在循环内查询数据库（将在新的连接上发生）：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">rows, err := db.Query(&quot;select * from tbl1&quot;) // Uses connection 1
+for rows.Next() {
+    err = rows.Scan(&amp;myvariable)
+    // The following line will NOT use connection 1, which is already in-use
+    db.Query(&quot;select * from tbl2 where id = ?&quot;, myvariable)
+}</code></pre></div>
+		
+		<p>但事务只能绑定一个连接，所以事务不可能：</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">tx, err := db.Begin()
+rows, err := tx.Query(&quot;select * from tbl1&quot;) // Uses tx&#39;s connection
+for rows.Next() {
+    err = rows.Scan(&amp;myvariable)
+    // ERROR! tx&#39;s connection is already busy!
+    tx.Query(&quot;select * from tbl2 where id = ?&quot;, myvariable)
+}</code></pre></div>
+		
+		<p>但是，Go不会阻止你尝试。 因此，如果你尝试在第一个释放资源并自行清理之前尝试执行另一个语句，则可能会遇到损坏的连接。 这也意味着事务中的每个语句都会产生一组单独的网络往返数据库。</p>
+	
+	</article>
+</main>

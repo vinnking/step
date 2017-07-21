@@ -1,0 +1,105 @@
+<main class="col-md-12 main-content">
+	<article class="post">
+		<h2 class="text-center">php扩展cURL执行中途无响应</h2>
+		
+		<h4 class="text-center">zhgxun<small> 2017年07月21日</small></h4>
+		
+		<hr />
+		
+		<p>今天跑脚本遇到一个奇怪的问题，就是cURL请求到后期会出现程序阻塞卡死，无异常无响应，一直挂起，脚本也不会自动结束。跟对方沟通后说，“哥们儿，是不是你们的程序有问题啊，这边研发排查了，说12点30左右没有收到你们的请求。然后我自己用网上的json工具请求了，一下就通过了”。是不是很尴尬，关键是根本不知道为什么。然后就是不停的尝试重跑脚本，偶尔有些脚本就跑过了，但好景不长，随时都可能出现无效的时候。一直看，请求一开始都是能正常完成的，越往后执行时间也变得逐渐增长，然后就可能变成死连接。就想到，肯定是cURL发送的请求有的无响应失效了，已经成僵尸连接，还一直阻塞脚本，导致资源一直存在，但是并不能继续使用。</p>
+		
+		<p>找了各种资料，还想尝试写一个类似定时器的定西，如果脚本执行超过1分钟，则强制丢弃掉该cURL链接。不知道PHP怎么实现这样的需求，还犹豫要不要用go来实现。涉及到json,xml等，用go毕竟没有PHP方便，就去手册阅读cURL的内容，企图找到一点有用的东西。而且cURL命令行工具是有重试功能的，猜想扩展肯定也有。但是该如何配置呢？</p>
+		
+		<p>看了<a href="https://segmentfault.com/a/1190000000313184#articleHeader10">PHP超时处理全面总结</a>这篇文章中的超时，才知道因为我的代码设置cURL连接选项时只设置了连接超时时间，并没有设置执行超时时间。观察通常10秒内正常都应该返回数据，我就设置了超时和执行时间都是30秒。增加这个参数限制后，总算能捕捉到无响应的请求了，剩下的就是如何处理在规定时间内无法返回结果的资源了。</p>
+		
+		<p>就是这几个参数没有了解过，给排查问题浪费了整整一个下午。</p>
+		
+		<div><pre class="line-numbers"><code class="language-php">/**
+ * CURLOPT_TIMEOUT设置cURL允许执行的最长秒数。
+ * CURLOPT_TIMEOUT_MS设置cURL允许执行的最长毫秒数。(在cURL7.16.2中被加入。从PHP5.2.3起可使用。)
+ * CURLOPT_CONNECTTIMEOUT在发起连接前等待的时间，如果设置为0，则无限等待。
+ * CURLOPT_CONNECTTIMEOUT_MS尝试连接等待的时间，以毫秒为单位。如果设置为0，则无限等待。在cURL7.16.2中被加入。从PHP5.2.3开始可用。
+ * CURLOPT_DNS_CACHE_TIMEOUT设置在内存中保存DNS信息的时间，默认为120秒。
+ */</code></pre></div>
+		
+		<p>增加执行超时后的请求设置函数。</p>
+		
+		<div><pre class="line-numbers"><code class="language-php">/**
+ * curl请求
+ *
+ * @param $url
+ * @param string $postData
+ * @param int $timeout
+ * @return array|mixed
+ * @throws Exception
+ */
+protected static function post($url, $postData = &#39;&#39;, $timeout = 5)
+{
+    $ret = array();
+    $times = 5;
+    do {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, &quot;POST&quot;);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        if ($postData != &#39;&#39;) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        // curl 执行最大秒数
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        $output = curl_exec($ch);
+        if ($errNo = curl_errno($ch)) {
+            error_log(&quot;Error [$errNo]: &quot; . curl_error($ch));
+        } else {
+            $ret = json_decode($output, true);
+            // 解析的结果集为空时停止查询
+            if (!is_array($ret) &amp;&amp; !trim($ret)) {
+                throw new Exception(__METHOD__ . &quot;: cURL调用失败, 信息为: &quot; . $output);
+            }
+            unset($output);
+        }
+        curl_close($ch);
+        // 每个接口返回的值不一致, 故使用效率较低的count来判断, 不使用isset($ret[0])来判断了
+        if (count($ret)) {
+            return $ret;
+        }
+    } while ($times--);
+    exit(__METHOD__ . &quot;: cURL请求重试至 {$times} 次后仍无响应, 执行退出&quot;);
+}</code></pre></div>
+		
+		<p>超时时的提示信息设置如：</p>
+		
+		<div><pre class="line-numbers"><code class="language-php">error_log(&quot;Error [$errNo]: &quot; . curl_error($ch));</code></pre></div>
+		
+		<p>我设置的连接时间和执行时间限制都是30秒。</p>
+		
+		<div><pre class="line-numbers"><code class="language-php">Error [28]: Operation timed out after 30000 milliseconds with 0 bytes received</code></pre></div>
+		
+		<p>可以输出查看，针对这种超时，直接丢弃该次连接，重新初始化一次资源请求即可。当然这里尝试重试6次，6次都还无法正常执行完毕，就只能在想别的办法了。虽然最终并不知道为什么会有连接失效，但是这样之后，就能保证基本可以完成任务了。</p>
+		
+		<p><img src="https://raw.githubusercontent.com/zhgxun/images/master/programming/curl_timeout.jpeg" alt="超时"></p>
+		
+		<p>我执行一个月的跑数脚本，所有超时情况就有这么多，幸运的是最终都没能等到重试6次，就请求成功了。从错误类型中，看到确实是有一些请求在30秒内未能执行完毕。</p>
+		
+		<div><pre class="line-numbers"><code class="language-php">Error [28]: Operation timed out after 30000 milliseconds with 0 bytes received
+Error [28]: Operation timed out after 30000 milliseconds with 0 bytes received
+Error [28]: Operation timed out after 30000 milliseconds with 62399 out of 323196 bytes received</code></pre></div>
+		
+		<p>需要补充的是，倘若执行重试失败，需要使用exit等函数直接退出脚本，否则可能导致无效的循环，比如：</p>
+		
+		<div><pre class="line-numbers"><code class="language-php">156013 : ./protected/yiic2014 DWHtUnitaryTax GetCGO1EachDayDataV2 --from=2017-04-01 --to=2017-05-01 --declare=2017-05-10
+DELETE 0 ROWS
+正在处理 2017-04-01 期间税单...开始时间: 2017-07-15 19:09:10
+正在处理第 1/80 批数据...
+开始时间: 2017-07-15 19:09:11
+Common::post: cURL请求重试至 -1 次后仍无响应, 执行退出
+exitStatus:0
+
+156013 : 结束 &quot;./protected/yiic2014 DWHtUnitaryTax GetCGO1EachDayDataV2 --from=2017-04-01 --to=2017-05-01 --declare=2017-05-10&quot;
+        [begin:2017-07-15 19:09:10 end:2017-07-15 19:10:09]                      历时:     59秒</code></pre></div>
+	
+	</article>
+</main>

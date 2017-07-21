@@ -1,0 +1,97 @@
+<main class="col-md-12 main-content">
+	<article class="post">
+		<h2 class="text-center">字符串子串的最大长度</h2>
+		
+		<h4 class="text-center">zhgxun<small> 2017年07月21日</small></h4>
+		
+		<hr />
+		
+		<p>昨天在<a href="https://leetcode.com/" target="_blank">LeetCode</a>上做题，有这么一道题：</p>
+		
+		<blockquote>
+			<p>Given a string, find the length of the longest substring without repeating characters.</p>
+			
+			<p>Examples:</p>
+			
+			<p>Given <q>abcabcbb</q>, the answer is <q>abc</q>, which the length is 3.</p>
+			
+			<p>Given <q>bbbbb</q>, the answer is <q>b</q>, with the length of 1.</p>
+			
+			<p>Given <q>pwwkew</q>, the answer is <q>wke</q>, with the length of 3. Note that the answer must be a substring, <q>pwke</q> is a subsequence and not a substring.</p>
+		</blockquote>
+		
+		<p>查找当前字符串不重复的子串最大长度，我看难度等级是中等。我用go写了至少2个小时吧，总算是完成了，但是一提交测试，所有单元测试都通过了，但是，最后一个超时，就是执行时间太长了而被拒绝。昨天忘记记录下该测试用例，是一个很长很长的字符串，我写出来的代码983个单元测试，除了这个长串超时外其余982个都通过了。我苦思不得其解，后来去看了别人的答案，才知道之所以把这类问题归类为算法题的原因，肯定是不能用常规的思路去解决。确实高人挺多，我辈需要学习的东西实在是太多了。</p>
+		
+		<p>下面给出两个答案，我觉得第二种比较好理解，第一种总是有点模糊，而且第二种的效率要比第一种高一些。</p>
+		
+		<div><pre class="line-numbers"><code class="language-go">// Given a string, find the length of the longest substring without repeating characters.
+package main
+
+import &quot;fmt&quot;
+
+func main() {
+    fmt.Println(lengthOfLongestSubstring(&quot;abba&quot;))
+    fmt.Println(lengthOfLongestSubstring1(&quot;abba&quot;))
+}
+
+// 用字符本身来记录, 该种方法因字典逐渐递增, 性能会下降
+// 单个字符串的类型为 byte
+func lengthOfLongestSubstring1(s string) int {
+    max := 0
+
+    length := len(s)
+    if length == 0 {
+        return max
+    }
+
+    // 字典, 存储的键为 byte 字符, 值为该字符在字符串中的位置
+    hash := make(map[byte]int, length)
+
+    for i, j := 0, 0; i &lt; length; i++ {
+        // i 是当前字符出现的位置
+        // j 记录该字符当前位置之前最近一次出现的位置
+        if v, ok := hash[s[i]]; ok &amp;&amp; v+1 &gt; j {
+            j = v + 1
+        }
+        hash[s[i]] = i
+        // 记录当前子串的最大长度
+        if i-j+1 &gt; max {
+            max = i - j + 1
+        }
+    }
+
+    return max
+}
+
+// 初始化字符标识, 因字符数量有限, 对长串字符处理比较高效, 且比第一种更容易理解
+func lengthOfLongestSubstring(s string) int {
+    // 基本的字符有127个, 如果没有别的特殊字符, 已经够存储
+    m := [128]int{}
+    for i := 0; i &lt; 128; i++ {
+        m[i] = -1
+    }
+
+    length, start := 0, -1
+
+    for i := 0; i &lt; len(s); i++ {
+        // 如果该字符被记录过, 则记录该字符已经记录的最大位置
+        if m[s[i]] &gt; start {
+            start = m[s[i]]
+        }
+        // 将存在的字符记录为键, 字符在字符串中的位置记录为值
+        m[s[i]] = i
+        // 当前位置 - 已经记录的最大位置, 为该次重复子串的最大长度
+        if i-start &gt; length {
+            length = i - start
+        }
+    }
+
+    return length
+}</code></pre></div>
+		
+		<p>面对一个问题，能实现出来固然不容易，但是更好的实现，思路确实太重要了。今天看了下Workerman框架，找到一篇文章说，他2010年毕业，应该在腾讯朋友网工作。看到这篇博客，是2016年在聚美优品。我问了下，说已经离职了。目前聚美rpc框架应该是他写的，不过后来又改版了很多，跟开源的那个应该有些差别了。我看了下项目中的这部分，确实有很多聚美业务方面的东西，跟开源的Workerman差别还是不小。</p>
+		
+		<p>如果让我写，我实在是写不出来。前几天同事还跟我说，排序准备两个，字符串匹配会一个，递归，动态规划，回溯各一个。这些东西对于经常写crud操作的人来说，确实没什么直接的用处。但是一旦涉及性能问题，常规的思路分析就没什么用了。</p>
+		
+	</article>
+</main>
