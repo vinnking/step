@@ -99,3 +99,10 @@
 ```
 
 由MacDown软件编写后转化为html格式后再次选择而成，博客中已经使用了MacDown生成Html的样式表和JavaScript文件。数据库中直接存储该源文件路径，即为显示的TplName模板名。
+
+```go
+m.Layout = "layout.html"
+m.TplName = post.Url
+```
+
+即数据库中存储的路径名Url所指向的视图位置，添加时如 stores/programming/2017/sql.html。
