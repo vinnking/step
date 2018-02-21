@@ -62,7 +62,7 @@ func Salt(size int, number int, lower int, upper int) (string, error) {
 	case lower < 0, upper < 0, lower > 26, upper > 26:
 		return "", errors.New("允许的字母范围0-26")
 	}
-
+	
 	// 按需要生成字符串
 	var result string
 	if lower > 0 {
@@ -77,6 +77,6 @@ func Salt(size int, number int, lower int, upper int) (string, error) {
 		uppers := string(Upper(upper))
 		result += uppers
 	}
-
+	
 	return result, nil
 }

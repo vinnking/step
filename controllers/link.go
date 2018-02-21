@@ -6,9 +6,9 @@ import (
 	"html/template"
 	"strconv"
 	"strings"
-
+	
 	"github.com/astaxie/beego"
-
+	
 	"step/models"
 )
 
@@ -64,7 +64,7 @@ func (l *LinkController) Create() {
 		}
 		l.Redirect("/link/"+strconv.FormatInt(id, 10), 302)
 	}
-
+	
 	l.Data["isNewRecord"] = true
 	l.Data["link"] = models.Link{}
 	l.Data["types"] = models.LinkTypeList()
@@ -100,7 +100,7 @@ func (l *LinkController) Update() {
 	if err != nil {
 		l.Redirect("/link ", 302)
 	}
-
+	
 	if l.Ctx.Request.Method == "POST" {
 		typeId, err := strconv.Atoi(strings.TrimSpace(l.Input().Get("type")))
 		if err != nil {
@@ -116,7 +116,7 @@ func (l *LinkController) Update() {
 		}
 		l.Redirect("/link/"+strconv.FormatInt(newId, 10), 302)
 	}
-
+	
 	l.Data["isNewRecord"] = false
 	l.Data["link"] = link
 	l.Data["types"] = models.LinkTypeList()

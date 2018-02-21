@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	
 	"github.com/astaxie/beego"
-
+	
 	"step/models"
 )
 
@@ -57,7 +57,7 @@ func (q *QuoteController) Create() {
 		}
 		q.Redirect("/quote/"+strconv.FormatInt(id, 10), 302)
 	}
-
+	
 	q.Data["isNewRecord"] = true
 	q.Data["quote"] = models.Quote{}
 	q.Data["xsrf"] = template.HTML(q.XSRFFormHTML())
@@ -93,7 +93,7 @@ func (q *QuoteController) Update() {
 	if err != nil {
 		q.Redirect("/quote ", 302)
 	}
-
+	
 	if q.Ctx.Request.Method == "POST" {
 		quote.Content = strings.TrimSpace(q.Input().Get("content"))
 		quote.Extra = strings.TrimSpace(q.Input().Get("extra"))
@@ -104,7 +104,7 @@ func (q *QuoteController) Update() {
 		}
 		q.Redirect("/quote/"+strconv.FormatInt(newId, 10), 302)
 	}
-
+	
 	q.Data["isNewRecord"] = false
 	q.Data["quote"] = quote
 	q.Data["xsrf"] = template.HTML(q.XSRFFormHTML())

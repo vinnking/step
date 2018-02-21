@@ -6,9 +6,9 @@ import (
 	"html/template"
 	"strconv"
 	"strings"
-
+	
 	"github.com/astaxie/beego"
-
+	
 	"step/models"
 )
 
@@ -51,7 +51,7 @@ func (l *LabelController) Create() {
 		}
 		l.Redirect("/label/"+strconv.FormatInt(id, 10), 302)
 	}
-
+	
 	l.Data["isNewRecord"] = true
 	l.Data["label"] = models.Label{}
 	l.Data["xsrf"] = template.HTML(l.XSRFFormHTML())
@@ -85,7 +85,7 @@ func (l *LabelController) Update() {
 	if err != nil {
 		l.Redirect("/label ", 302)
 	}
-
+	
 	if l.Ctx.Request.Method == "POST" {
 		label.Name = strings.TrimSpace(l.Input().Get("name"))
 		label.Content = strings.TrimSpace(l.Input().Get("content"))
@@ -95,7 +95,7 @@ func (l *LabelController) Update() {
 		}
 		l.Redirect("/label/"+strconv.FormatInt(newId, 10), 302)
 	}
-
+	
 	l.Data["isNewRecord"] = false
 	l.Data["label"] = label
 	l.Data["xsrf"] = template.HTML(l.XSRFFormHTML())

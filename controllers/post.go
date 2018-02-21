@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	
 	"github.com/astaxie/beego"
-
+	
 	"step/models"
 )
 
@@ -94,7 +94,7 @@ func (p *PostController) Create() {
 		}
 		p.Redirect("/post/"+strconv.FormatInt(id, 10), 302)
 	}
-
+	
 	p.Data["isNewRecord"] = true
 	p.Data["post"] = models.Post{}
 	p.Data["types"] = models.Menus()
@@ -139,7 +139,7 @@ func (p *PostController) Update() {
 	if err != nil {
 		p.Redirect("/post ", 302)
 	}
-
+	
 	if p.Ctx.Request.Method == "POST" {
 		typeId, err := strconv.Atoi(strings.TrimSpace(p.Input().Get("type")))
 		if err != nil {
@@ -179,7 +179,7 @@ func (p *PostController) Update() {
 		}
 		p.Redirect("/post/"+strconv.FormatInt(newId, 10), 302)
 	}
-
+	
 	p.Data["isNewRecord"] = false
 	p.Data["post"] = post
 	p.Data["types"] = models.Menus()

@@ -4,9 +4,9 @@ package controllers
 import (
 	"strconv"
 	"strings"
-
+	
 	"github.com/astaxie/beego"
-
+	
 	"step/models"
 )
 
@@ -17,7 +17,7 @@ type MainController struct {
 // Get 首页
 func (m *MainController) Get() {
 	menuList := models.MenuList()
-
+	
 	var cateId int
 	var err error
 	cateId = 1
@@ -67,7 +67,7 @@ func (m *MainController) View() {
 // Label 标签相关文章
 func (m *MainController) Label() {
 	menuList := models.MenuList()
-
+	
 	var labelId int
 	var err error
 	lId := m.Ctx.Input.Param(":id")
@@ -76,7 +76,7 @@ func (m *MainController) Label() {
 			labelId = 1
 		}
 	}
-
+	
 	m.Data["quote"] = models.QuoteOne()
 	m.Data["menus"] = menuList
 	m.Data["cateId"] = 0

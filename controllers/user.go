@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	
 	"github.com/astaxie/beego"
-
+	
 	"step/models"
 )
 
@@ -66,7 +66,7 @@ func (u *UserController) Create() {
 		}
 		u.Redirect("/user/"+strconv.FormatInt(id, 10), 302)
 	}
-
+	
 	u.Data["roles"] = models.Roles()
 	u.Data["user"] = models.User{}
 	u.Data["isNewRecord"] = true
@@ -104,7 +104,7 @@ func (u *UserController) Update() {
 	if err != nil {
 		u.Redirect("/user", 302)
 	}
-
+	
 	if u.Ctx.Request.Method == "POST" {
 		nickname := u.Input().Get("nickname")
 		email := u.Input().Get("email")
@@ -123,7 +123,7 @@ func (u *UserController) Update() {
 		}
 		u.Redirect("/user/"+strconv.FormatInt(newId, 10), 302)
 	}
-
+	
 	u.Data["user"] = user
 	u.Data["isNewRecord"] = false
 	u.Data["roles"] = models.Roles()
